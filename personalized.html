@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalized Picks - ComicHelper</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="logo" onclick="navigateTo('index')">ComicHelper</div>
+        <ul class="nav-links" id="nav-links">
+            <li><a href="index.html" data-page="home">Home</a></li>
+            <li><a href="wiki.html" data-page="wiki">Wiki</a></li>
+            <li><a href="guides.html" data-page="guides">Guides</a></li>
+            <li><a href="recommendations.html" data-page="recommendations">Recommendations</a></li>
+            <li><a href="personalized.html" class="active" data-page="personalized">Personalized Picks</a></li>
+        </ul>
+        <div class="mobile-menu" onclick="toggleMobileMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        <div class="chat-container">
+            <div class="chat-header">
+                <h2>🎯 Personalized Picks</h2>
+                <p>Tell me exactly what you're looking for!</p>
+            </div>
+            
+            <!-- Example Prompts -->
+            <div class="quick-prompts">
+                <button class="quick-prompt" onclick="setQuickPrompt('personalized', 'I love dark, gritty stories like The Boys. What should I read?')">Dark & Gritty</button>
+                <button class="quick-prompt" onclick="setQuickPrompt('personalized', 'I just watched the Batman movie and want to get into comics. Where do I start?')">After Batman Movie</button>
+                <button class="quick-prompt" onclick="setQuickPrompt('personalized', 'Looking for funny comics with humor like Deadpool')">Funny Comics</button>
+                <button class="quick-prompt" onclick="setQuickPrompt('personalized', 'I want something with deep emotional stories and great artwork')">Emotional & Artistic</button>
+            </div>
+            
+            <!-- Chat Messages -->
+            <div class="chat-messages" id="personalized-messages">
+                <div class="message ai">
+                    <p>🎉 Hi! I'm your Personalized Comic Picker!</p>
+                    <p>Tell me about your preferences in detail. For example:</p>
+                    <ul>
+                        <li>"I love sci-fi and want something with complex world-building"</li>
+                        <li>"I'm looking for romance comics with diverse characters"</li>
+                        <li>"I want horror comics that are actually scary, not gory"</li>
+                        <li>"I liked Watchmen and want something mature and thought-provoking"</li>
+                    </ul>
+                    <p>The more you tell me, the better recommendations I can give!</p>
+                </div>
+            </div>
+            
+            <!-- Chat Input -->
+            <div class="chat-input">
+                <input type="text" id="personalized-input" placeholder="Describe what you're looking for in detail...">
+                <button id="personalized-send">Send</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>ComicHelper - Powered by <a href="https://ollama.com" target="_blank">Ollama</a></p>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

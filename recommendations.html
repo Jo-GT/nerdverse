@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recommendations - ComicHelper</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="logo" onclick="navigateTo('index')">ComicHelper</div>
+        <ul class="nav-links" id="nav-links">
+            <li><a href="index.html" data-page="home">Home</a></li>
+            <li><a href="wiki.html" data-page="wiki">Wiki</a></li>
+            <li><a href="guides.html" data-page="guides">Guides</a></li>
+            <li><a href="recommendations.html" class="active" data-page="recommendations">Recommendations</a></li>
+            <li><a href="personalized.html" data-page="personalized">Personalized Picks</a></li>
+        </ul>
+        <div class="mobile-menu" onclick="toggleMobileMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        <div class="recommendations-container">
+            <div class="recommendations-header">
+                <h2>🎯 Comic Recommendations</h2>
+                <p>Tell us what you like, and we'll suggest the perfect comics!</p>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="filter-section">
+                <div class="filter-group">
+                    <label for="hero-select">Favorite Hero/Character</label>
+                    <select id="hero-select">
+                        <option value="">Select a hero...</option>
+                        <option value="spiderman">Spider-Man</option>
+                        <option value="batman">Batman</option>
+                        <option value="superman">Superman</option>
+                        <option value="ironman">Iron Man</option>
+                        <option value="wonderwoman">Wonder Woman</option>
+                        <option value="xmen">X-Men</option>
+                        <option value="theboys">The Boys</option>
+                        <option value="deadpool">Deadpool</option>
+                        <option value="harleyquinn">Harley Quinn</option>
+                        <option value="any">No preference</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="trope-select">Favorite Trope</label>
+                    <select id="trope-select">
+                        <option value="">Select a trope...</option>
+                        <option value="dark">Dark & Gritty</option>
+                        <option value="humor">Humorous</option>
+                        <option value="romance">Romance</option>
+                        <option value="scifi">Sci-Fi</option>
+                        <option value="horror">Horror</option>
+                        <option value="action">Action-Packed</option>
+                        <option value="any">No preference</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="movie-select">Favorite Movie/Show Adaptation</label>
+                    <select id="movie-select">
+                        <option value="">Select a show/movie...</option>
+                        <option value="marvel">Marvel Movies</option>
+                        <option value="dc">DC Movies</option>
+                        <option value="theboys">The Boys (TV)</option>
+                        <option value="invincible">Invincible (TV)</option>
+                        <option value="daredevil">Daredevil (TV)</option>
+                        <option value="watchmen">Watchmen</option>
+                        <option value="any">No preference</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Genres</label>
+                    <div class="genre-tags" id="genre-tags">
+                        <span class="genre-tag" data-genre="superhero">Superhero</span>
+                        <span class="genre-tag" data-genre="horror">Horror</span>
+                        <span class="genre-tag" data-genre="scifi">Sci-Fi</span>
+                        <span class="genre-tag" data-genre="romance">Romance</span>
+                        <span class="genre-tag" data-genre="comedy">Comedy</span>
+                        <span class="genre-tag" data-genre="manga">Manga</span>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="getRecommendations()" style="width: 100%;">Get Recommendations</button>
+            </div>
+
+            <!-- Results -->
+            <div id="recommendations-results"></div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>ComicHelper - Powered by <a href="https://ollama.com" target="_blank">Ollama</a></p>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

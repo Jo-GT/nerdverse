@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ComicHelper - AI Comic Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="logo" onclick="navigateTo('index')">ComicHelper</div>
+        <ul class="nav-links" id="nav-links">
+            <li><a href="index.html" class="active" data-page="home">Home</a></li>
+            <li><a href="wiki.html" data-page="wiki">Wiki</a></li>
+            <li><a href="guides.html" data-page="guides">Guides</a></li>
+            <li><a href="recommendations.html" data-page="recommendations">Recommendations</a></li>
+            <li><a href="personalized.html" data-page="personalized">Personalized Picks</a></li>
+        </ul>
+        <div class="mobile-menu" onclick="toggleMobileMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1>ComicHelper</h1>
+            <p class="tagline">Your AI-powered companion for <span>comic recommendations</span>, <span>wikis</span>, and <span>guides</span></p>
+            <div class="hero-buttons">
+                <button class="btn btn-primary" onclick="navigateTo('wiki')">📚 Ask the Wiki</button>
+                <button class="btn btn-secondary" onclick="navigateTo('guides')">📖 Get Guides</button>
+                <button class="btn btn-outline" onclick="navigateTo('recommendations')">🎯 Get Recommendations</button>
+            </div>
+        </section>
+
+        <!-- Assistant Cards -->
+        <div class="assistant-grid">
+            <div class="assistant-card" onclick="navigateTo('wiki')">
+                <div class="assistant-icon">📚</div>
+                <h3>Wiki Assistant</h3>
+                <p>Ask anything about comic characters, storylines, events, and universes. Get detailed information powered by AI.</p>
+                <button class="btn btn-primary">Launch Wiki</button>
+            </div>
+            <div class="assistant-card" onclick="navigateTo('guides')">
+                <div class="assistant-icon">📖</div>
+                <h3>Guide Assistant</h3>
+                <p>New to comics? Get beginner guides, reading orders, and series recommendations tailored to your interests.</p>
+                <button class="btn btn-secondary">Launch Guides</button>
+            </div>
+            <div class="assistant-card" onclick="navigateTo('recommendations')">
+                <div class="assistant-icon">🎯</div>
+                <h3>Recommendations</h3>
+                <p>Based on your favorite hero, trope, or movie adaptation, get personalized comic recommendations.</p>
+                <button class="btn btn-outline">Get Recommendations</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>ComicHelper - Powered by <a href="https://ollama.com" target="_blank">Ollama</a></p>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
