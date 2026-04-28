@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popular Comics | NerdVerse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;600;700&family=JetBrains+Mono:wght@400;500&family=Orbitron:wght@400;500;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        :root {
+            --marvel-red: #ec1d24;
+            --dc-blue: #0476f2;
+            --boys-red: #ff3e3e;
+            --invincible-blue: #00a8ff;
+            --image-purple: #00c787;
+            --dark-horse: #4a1a1a;
+        }
+
+        .comics-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 120px 2rem 4rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            background: linear-gradient(135deg, var(--marvel-red), var(--dc-blue), var(--invincible-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* Franchise Tabs */
+        .franchise-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .franchise-tab {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border: 2px solid var(--border);
+            background: transparent;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .franchise-tab:hover {
+            transform: translateY(-2px);
+        }
+
+        .franchise-tab.active {
+            border-color: var(--primary);
+            background: rgba(255, 107, 53, 0.2);
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
+        }
+
+        .franchise-tab[data-franchise="marvel"].active {
+            border-color: var(--marvel-red);
+            background: rgba(236, 29, 36, 0.2);
+            box-shadow: 0 0 20px rgba(236, 29, 36, 0.3);
+        }
+
+        .franchise-tab[data-franchise="dc"].active {
+            border-color: var(--dc-blue);
+            background: rgba(4, 118, 242, 0.2);
+            box-shadow: 0 0 20px rgba(4, 118, 242, 0.3);
+        }
+
+        .franchise-tab[data-franchise="theboys"].active {
+            border-color: var(--boys-red);
+            background: rgba(255, 62, 62, 0.2);
+            box-shadow: 0 0 20px rgba(255, 62, 62, 0.3);
+        }
+
+        .franchise-tab[data-franchise="invincible"].active {
+            border-color: var(--invincible-blue);
+            background: rgba(0, 168, 255, 0.2);
+            box-shadow: 0 0 20px rgba(0, 168, 255, 0.3);
+        }
+
+        .franchise-tab[data-franchise="image"].active {
+            border-color: var(--image-purple);
+            background: rgba(0, 199, 135, 0.2);
+            box-shadow: 0 0 20px rgba(0, 199, 135, 0.3);
+        }
+
+        .franchise-tab[data-franchise="indie"].active {
+            border-color: var(--accent);
+            background: rgba(255, 215, 0, 0.2);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        /* Character Filter */
+        .character-filter {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .character-filter h3 {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .character-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .character-chip {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .character-chip:hover {
+            border-color: var(--primary);
+            color: var(--text-primary);
+        }
+
+        .character-chip.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        /* Comics Grid */
+        .comics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .comic-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .comic-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .comic-cover {
+            height: 200px;
+            background: linear-gradient(135deg, var(--surface-elevated), var(--surface));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Bangers', cursive;
+            font-size: 3rem;
+            color: var(--border);
+        }
+
+        .comic-card[data-franchise="marvel"] .comic-cover {
+            background: linear-gradient(135deg, #1a0a0a, #2d1515);
+            color: var(--marvel-red);
+        }
+
+        .comic-card[data-franchise="dc"] .comic-cover {
+            background: linear-gradient(135deg, #0a1a2d, #152d4a);
+            color: var(--dc-blue);
+        }
+
+        .comic-card[data-franchise="theboys"] .comic-cover {
+            background: linear-gradient(135deg, #2d0a0a, #4a1515);
+            color: var(--boys-red);
+        }
+
+        .comic-card[data-franchise="invincible"] .comic-cover {
+            background: linear-gradient(135deg, #0a1a2d, #152d4a);
+            color: var(--invincible-blue);
+        }
+
+        .comic-card[data-franchise="image"] .comic-cover {
+            background: linear-gradient(135deg, #0a2d1a, #154a2d);
+            color: var(--image-purple);
+        }
+
+        .comic-card[data-franchise="indie"] .comic-cover {
+            background: linear-gradient(135deg, #2d2d0a, #4a4a15);
+            color: var(--accent);
+        }
+
+        .comic-info {
+            padding: 1.25rem;
+        }
+
+        .comic-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .comic-issue {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+        }
+
+        .comic-characters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .character-tag {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            background: rgba(255, 107, 53, 0.1);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            border-radius: 4px;
+            color: var(--primary);
+        }
+
+        .comic-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .comic-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.85rem;
+        }
+
+        .comic-meta span {
+            color: var(--text-secondary);
+        }
+
+        .comic-meta span strong {
+            color: var(--text-primary);
+        }
+
+        /* No Results */
+        .no-results {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .no-results h3 {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .franchise-tabs {
+                gap: 0.25rem;
+            }
+
+            .franchise-tab {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+            }
+
+            .comics-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="logo" onclick="navigateTo('index')">NerdVerse</div>
+        <ul class="nav-links" id="nav-links">
+            <li><a href="index.html" data-page="home">Home</a></li>
+            <li><a href="wiki.html" data-page="wiki">Wiki</a></li>
+            <li><a href="guides.html" data-page="guides">Guides</a></li>
+            <li><a href="marvel.html" data-page="marvel">Marvel</a></li>
+            <li><a href="dcu.html" data-page="dcu">DCU</a></li>
+            <li><a href="comics.html" data-page="comics" class="active">Comics</a></li>
+        </ul>
+        <div class="mobile-menu" onclick="toggleMobileMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </nav>
+
+    <div class="comics-container">
+        <div class="page-header">
+            <h1>POPULAR COMICS</h1>
+            <p>Explore trending comics from across the multiverse</p>
+        </div>
+
+        <!-- Franchise Tabs -->
+        <div class="franchise-tabs">
+            <button class="franchise-tab active" data-franchise="all">All Franchises</button>
+            <button class="franchise-tab" data-franchise="marvel">Marvel</button>
+            <button class="franchise-tab" data-franchise="dc">DC</button>
+            <button class="franchise-tab" data-franchise="theboys">The Boys</button>
+            <button class="franchise-tab" data-franchise="invincible">Invincible</button>
+            <button class="franchise-tab" data-franchise="image">Image</button>
+            <button class="franchise-tab" data-franchise="indie">Indie</button>
+        </div>
+
+        <!-- Character Filter -->
+        <div class="character-filter">
+            <h3>Filter by Characters</h3>
+            <div class="character-chips" id="character-chips">
+                <!-- Populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Comics Grid -->
+        <div class="comics-grid" id="comics-grid">
+            <!-- Populated by JavaScript -->
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script>
+        // Comic Database
+        const comicsDatabase = [
+            // MARVEL
+            {
+                franchise: "marvel",
+                title: "Amazing Spider-Man",
+                issue: "#1-50",
+                year: "2022-2023",
+                characters: ["Spider-Man", "Mary Jane", "Green Goblin", "Vulture"],
+                description: "Peter Parker faces new challenges as Spider-Man while dealing with his personal life.",
+                writer: "Zeb Wells",
+                artist: "John Romiola Jr."
+            },
+            {
+                franchise: "marvel",
+                title: "X-Men Red",
+                issue: "#1-18",
+                year: "2022-2023",
+                characters: ["Storm", "Magneto", "Apocalypse", "Wolverine"],
+                description: "Storm assembles a new team of X-Men to protect Krakoa from emerging threats.",
+                writer: "Al Ewing",
+                artist: "Stefano Caselli"
+            },
+            {
+                franchise: "marvel",
+                title: "Immortal Thor",
+                issue: "#1-18",
+                year: "2023-2024",
+                characters: ["Thor", "Jane Foster", "Mjolnir"],
+                description: "Thor faces cosmic threats as the Immortal God of Thunder.",
+                writer: "Al Ewing",
+                artist: "Dustin Weaver"
+            },
+            {
+                franchise: "marvel",
+                title: "Captain America",
+                issue: "#1-50",
+                year: "2023-2024",
+                characters: ["Captain America", "Bucky", "Red Guardian"],
+                description: "Sam Wilson takes on the shield in this new era of Captain America.",
+                writer: "Jed MacKay",
+                artist: "Carlos Zema"
+            },
+            {
+                franchise: "marvel",
+                title: "Venom",
+                issue: "#1-25",
+                year: "2023-2024",
+                characters: ["Venom", "Eddie Brock", "Knull"],
+                description: "Eddie Brock returns as Venom facing the god of the symbiotes.",
+                writer: "Al Ewing",
+                artist: "Ryan Stegemann"
+            },
+            {
+                franchise: "marvel",
+                title: "Wolverine",
+                issue: "#1-35",
+                year: "2020-2022",
+                characters: ["Wolverine", "Captain America", "Omega Red"],
+                description: "Logan navigates his past and present in this action-packed series.",
+                writer: "Benjamin Percy",
+                artist: "Josh Cassari"
+            },
+            {
+                franchise: "marvel",
+                title: "Avengers",
+                issue: "#1-20",
+                year: "2023-2024",
+                characters: ["Thor", "Captain America", "Iron Man", "Vision"],
+                description: "Earth's Mightiest Heroes face unprecedented threats.",
+                writer: "Jed MacKay",
+                artist: "C.F. Villa"
+            },
+            {
+                franchise: "marvel",
+                title: "Miles Morales: Spider-Man",
+                issue: "#1-30",
+                year: "2022-2024",
+                characters: ["Miles Morales", "Ganke", "Tombstone"],
+                description: "Miles balances being Spider-Man with his life as a teenager.",
+                writer: "Cody Ziglar",
+                artist: "Paco Colab"
+            },
+
+            // DC
+            {
+                franchise: "dc",
+                title: "Batman",
+                issue: "#1-150",
+                year: "2021-2024",
+                characters: ["Batman", "Joker", "Catwoman", "Scarecrow"],
+                description: "Gotham's Dark Knight faces his greatest challenges yet.",
+                writer: "Chip Zdarsky",
+                artist: "Jorge Jimenez"
+            },
+            {
+                franchise: "dc",
+                title: "Superman",
+                issue: "#1-50",
+                year: "2021-2023",
+                characters: ["Superman", "Lois Lane", "Lex Luthor", "Jon Kent"],
+                description: "Clark Kent faces new threats while protecting Earth.",
+                writer: "Phillip Kennedy Johnson",
+                artist: "Jamal Campbell"
+            },
+            {
+                franchise: "dc",
+                title: "Wonder Woman",
+                issue: "#1-50",
+                year: "2022-2024",
+                characters: ["Wonder Woman", "Steve Trevor", "Cheeta"],
+                description: "Diana fights to protect Themyscira and the mortal world.",
+                writer: "Tom King",
+                artist: "Daniel Sampere"
+            },
+            {
+                franchise: "dc",
+                title: "The Flash",
+                issue: "#1-50",
+                year: "2022-2024",
+                characters: ["Flash", "Kid Flash", "Reverse Flash", "Gorilla Grodd"],
+                description: "Barry Allen races against time to save Central City.",
+                writer: "Joshua Williamson",
+                artist: "Gustavo Duarte"
+            },
+            {
+                franchise: "dc",
+                title: "Green Lantern",
+                issue: "#1-30",
+                year: "2023-2024",
+                characters: ["Hal Jordan", "John Stewart", "Sinestro", "Kilowog"],
+                description: "The Green Lantern Corps faces new cosmic threats.",
+                writer: "Jeremy Adams",
+                artist: "Xermanico"
+            },
+            {
+                franchise: "dc",
+                title: "Nightwing",
+                issue: "#1-50",
+                year: "2022-2024",
+                characters: ["Nightwing", "Batgirl", "Blockbuster"],
+                description: "Dick Grayson finds a new purpose in Blüdhaven.",
+                writer: "Tom Taylor",
+                artist: "Bruno Redondo"
+            },
+            {
+                franchise: "dc",
+                title: "Harley Quinn",
+                issue: "#1-35",
+                year: "2021-2023",
+                characters: ["Harley Quinn", "Poison Ivy", "Joker"],
+                description: "Harley navigates her new life in Coney Island.",
+                writer: "Stephanie Phillips",
+                artist: "Riley Rossmo"
+            },
+            {
+                franchise: "dc",
+                title: "Shazam!",
+                issue: "#1-15",
+                year: "2023-2024",
+                characters: ["Shazam", "Mary Marvel", "Dr. Sivana"],
+                description: "Billy Batson embraces his role as Earth's mightiest mortal.",
+                writer: "Mark Waid",
+                artist: "Dan Mora"
+            },
+
+            // THE BOYS
+            {
+                franchise: "theboys",
+                title: "The Boys",
+                issue: "#1-72",
+                year: "2019-2024",
+                characters: ["Homelander", "Butcher", "Hughie", "Starlight", "A-Train"],
+                description: "A group of vigilantes take down corrupt superheroes.",
+                writer: "Garth Ennis",
+                artist: "Darick Robertson"
+            },
+            {
+                franchise: "theboys",
+                title: "Herogasm",
+                issue: "#1-6",
+                year: "2022",
+                characters: ["Homelander", "Soldier Boy", "Queen Maeve"],
+                description: "The Supes go to a hedonistic retreat with shocking results.",
+                writer: "Garth Ennis",
+                artist: "Tony K. Vilanova"
+            },
+            {
+                franchise: "theboys",
+                title: "Dawn of the 7",
+                issue: "#1-4",
+                year: "2023",
+                characters: ["The Seven", "Butcher", "Starlight"],
+                description: "The Boys plan their biggest operation yet.",
+                writer: "Garth Ennis",
+                artist: "Darick Robertson"
+            },
+            {
+                franchise: "theboys",
+                title: "Dear Becky",
+                issue: "#1-7",
+                year: "2024",
+                characters: ["Butcher", "Becca", "Ryan"],
+                description: "A backstory exploring Butcher's relationship with his wife.",
+                writer: "Garth Ennis",
+                artist: "Jason Shawn Alexander"
+            },
+
+            // INVINCIBLE
+            {
+                franchise: "invincible",
+                title: "Invincible",
+                issue: "#1-144",
+                year: "2002-2013",
+                characters: ["Mark Grayson", "Omni-Man", "Atom Eve", "Rudy"],
+                description: "Young hero Mark Grayson learns the truth about his father.",
+                writer: "Robert Kirkman",
+                artist: "Cory Walker"
+            },
+            {
+                franchise: "invincible",
+                title: "Invincible Universe",
+                issue: "#1-12",
+                year: "2023-2024",
+                characters: ["Atom Eve", "Rudy", "Dupli-Kate"],
+                description: "New heroes emerge in the Invincible universe.",
+                writer: "Robert Kirkman",
+                artist: "Ariela"
+            },
+            {
+                franchise: "invincible",
+                title: "Tech Jacket",
+                issue: "#1-12",
+                year: "2014-2015",
+                characters: ["Jack", "Zed", "Tech Jacket"],
+                description: "A teen with a high-tech suit fights alien threats.",
+                writer: "Robert Kirkman",
+                artist: "Jason Walton"
+            },
+
+            // IMAGE
+            {
+                franchise: "image",
+                title: "Saga",
+                issue: "#1-66",
+                year: "2012-2023",
+                characters: ["Alana", "Marko", "Hazel", "Prince Robot"],
+                description: "A couple from warring species try to raise their family.",
+                writer: "Brian K. Vaughan",
+                artist: "Fiona Staples"
+            },
+            {
+                franchise: "image",
+                title: "Witching Hour",
+                issue: "#1-3",
+                year: "2023",
+                characters: ["Witches", "Lords of Hell"],
+                description: "Three witches judge the souls of the powerful.",
+                writer: "Brian K. Vaughan",
+                artist: "Al Ewing"
+            },
+            {
+                franchise: "image",
+                title: "Spawn",
+                issue: "#1-360+",
+                year: "1992-Present",
+                characters: ["Spawn", "Al Simmons", "Violator", "Cog"],
+                description: "A dead man makes a deal with the devil for revenge.",
+                writer: "Todd McFarlane",
+                artist: "Todd McFarlane"
+            },
+            {
+                franchise: "image",
+                title: "The Walking Dead",
+                issue: "#1-193",
+                year: "2003-2019",
+                characters: ["Rick Grimes", "Michonne", "Negan", "Carl"],
+                description: "Survivors navigate a zombie apocalypse.",
+                writer: "Robert Kirkman",
+                artist: "Charlie Adlard"
+            },
+            {
+                franchise: "image",
+                title: "Paper Girls",
+                issue: "#1-30",
+                year: "2015-2019",
+                characters: ["Caitlin", "KJ", "Mac", "Tara"],
+                description: "Four girls get caught in a time-travel adventure.",
+                writer: "Brian K. Vaughan",
+                artist: "Clara Chiang"
+            },
+            {
+                franchise: "image",
+                title: "Descender",
+                issue: "#1-32",
+                year: "2015-2018",
+                characters: ["Tim-21", "Dr. Quinzel", "Mother"],
+                description: "A robot boy searches for his purpose.",
+                writer: "Jeff Lemire",
+                artist: "Dustin Nguyen"
+            },
+
+            // INDIE
+            {
+                franchise: "indie",
+                title: "Hellboy",
+                issue: "#1-50",
+                year: "2019-2023",
+                characters: ["Hellboy", "Abe Sapien", "Liz Sherman"],
+                description: "The world's greatest paranormal investigator returns.",
+                writer: "Mike Mignola",
+                artist: "Scott Duich"
+            },
+            {
+                franchise: "indie",
+                title: "The Goon",
+                issue: "#1-40",
+                year: "2020-2023",
+                characters: ["The Goon", "Franky", "Pandy"],
+                description: "A street-fighting man battles supernatural threats.",
+                writer: "Eric Powell",
+                artist: "Eric Powell"
+            },
+            {
+                franchise: "indie",
+                title: "Chew",
+                issue: "#1-60",
+                year: "2009-2016",
+                characters: ["Tony Chu", "Ciby", "Mason"],
+                description: "A detective who can taste crimes solves cases.",
+                writer: "John Layman",
+                artist: "Rob Guillory"
+            },
+            {
+                franchise: "indie",
+                title: "Locke & Key",
+                issue: "#1-18",
+                year: "2017-2021",
+                characters: ["Kinsey", "Rory", "Tyler"],
+                description: "A family discovers magical keys in their home.",
+                writer: "Joe Hill",
+                artist: "Gabriel Rodriguez"
+            },
+            {
+                franchise: "indie",
+                title: "Y: The Last Man",
+                issue: "#1-66",
+                year: "2018-2023",
+                characters: ["Yorick", "355", "Amber"],
+                description: "One man and his monkey survive a plague.",
+                writer: "Brian K. Vaughan",
+                artist: "Pia Guerra"
+            },
+            {
+                franchise: "indie",
+                title: "Fables",
+                issue: "#1-150",
+                year: "2002-2015",
+                characters: ["Bigby", "Snow White", "Fabletown"],
+                description: "Fairy tale characters live in modern New York.",
+                writer: "Bill Willingham",
+                artist: "Mark Buckingham"
+            }
+        ];
+
+        // Character chips for each franchise
+        const franchiseCharacters = {
+            all: ["Spider-Man", "Batman", "Superman", "Wolverine", "Thor", "Wonder Woman", "Flash", "Green Lantern", "Harley Quinn", "Deadpool", "Venom", "Iron Man", "Captain America", "Storm", "Homelander", "Butcher", "Starlight", "Mark Grayson", "Invincible", "Spawn", "Rick Grimes", "Hellboy"],
+            marvel: ["Spider-Man", "Wolverine", "Thor", "Storm", "Venom", "Deadpool", "Iron Man", "Captain America", "X-Men", "Fantastic Four", "Hulk", "Black Panther", "Doctor Strange", "Star-Lord"],
+            dc: ["Batman", "Superman", "Wonder Woman", "Flash", "Green Lantern", "Harley Quinn", "Nightwing", "Aquaman", "Shazam", "Catwoman", "Joker", "Lex Luthor", "Sinestro", "Poison Ivy"],
+            theboys: ["Homelander", "Butcher", "Hughie", "Starlight", "A-Train", "Queen Maeve", "Black Noir", "Soldier Boy", "Frenchie", "Mother's Milk"],
+            invincible: ["Mark Grayson", "Omni-Man", "Atom Eve", "Rudy", "Tech Jacket", "Dupli-Kate", "Battle Beast", "Thragg", "Allen the Alien"],
+            image: ["Spawn", "Walking Dead", "Saga", "Invincible", "Chew", "Paper Girls", "Descender", "Witch Doctor", "Black Science"],
+            indie: ["Hellboy", "The Goon", "Locke & Key", "Y: The Last Man", "Fables", "Sandman", "Preacher", "Transmetropolitan", "Scalped", "Criminal"]
+        };
+
+        let currentFranchise = 'all';
+        let selectedCharacters = [];
+
+        // Initialize
+        function init() {
+            populateCharacterChips('all');
+            renderComics();
+            setupEventListeners();
+        }
+
+        function populateCharacterChips(franchise) {
+            const container = document.getElementById('character-chips');
+            const characters = franchiseCharacters[franchise] || franchiseCharacters.all;
+            
+            container.innerHTML = characters.map(char => `
+                <button class="character-chip" data-character="${char}">${char}</button>
+            `).join('');
+
+            // Add click listeners
+            container.querySelectorAll('.character-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    chip.classList.toggle('active');
+                    const char = chip.dataset.character;
+                    if (selectedCharacters.includes(char)) {
+                        selectedCharacters = selectedCharacters.filter(c => c !== char);
+                    } else {
+                        selectedCharacters.push(char);
+                    }
+                    renderComics();
+                });
+            });
+        }
+
+        function renderComics() {
+            const grid = document.getElementById('comics-grid');
+            let filtered = comicsDatabase;
+
+            // Filter by franchise
+            if (currentFranchise !== 'all') {
+                filtered = filtered.filter(c => c.franchise === currentFranchise);
+            }
+
+            // Filter by characters
+            if (selectedCharacters.length > 0) {
+                filtered = filtered.filter(c => 
+                    c.characters.some(char => 
+                        selectedCharacters.some(selected => 
+                            char.toLowerCase().includes(selected.toLowerCase()) ||
+                            selected.toLowerCase().includes(char.toLowerCase())
+                        )
+                    )
+                );
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="no-results" style="grid-column: 1 / -1;">
+                        <h3>No comics found</h3>
+                        <p>Try adjusting your character filters</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(comic => `
+                <div class="comic-card" data-franchise="${comic.franchise}">
+                    <div class="comic-cover">${comic.title.substring(0, 2).toUpperCase()}</div>
+                    <div class="comic-info">
+                        <div class="comic-title">${comic.title}</div>
+                        <div class="comic-issue">${comic.issue} (${comic.year})</div>
+                        <div class="comic-characters">
+                            ${comic.characters.slice(0, 4).map(c => `<span class="character-tag">${c}</span>`).join('')}
+                        </div>
+                        <div class="comic-description">${comic.description}</div>
+                        <div class="comic-meta">
+                            <span>Writer: <strong>${comic.writer}</strong></span>
+                            <span>Artist: <strong>${comic.artist}</strong></span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function setupEventListeners() {
+            // Franchise tabs
+            document.querySelectorAll('.franchise-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.franchise-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentFranchise = tab.dataset.franchise;
+                    
+                    // Reset character filters
+                    selectedCharacters = [];
+                    populateCharacterChips(currentFranchise);
+                    renderComics();
+                });
+            });
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
