@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marvel Cinematic Universe Timeline | NerdVerse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        :root {
+            --marvel-red: #ec1d24;
+            --marvel-dark: #ed171f;
+            --marvel-gold: #fdb927;
+            --dcu-blue: #0476f2;
+            --dcu-red: #e61924;
+            --dcu-gold: #ffd700;
+        }
+
+        .timeline-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 120px 2rem 4rem;
+        }
+
+        .timeline-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .timeline-header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.5rem;
+            background: linear-gradient(135deg, var(--marvel-red), var(--marvel-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 60px rgba(236, 29, 36, 0.5);
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-header .subtitle {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+
+        /* Phase Filter */
+        .phase-filter {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 3rem;
+        }
+
+        .phase-btn {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border: 2px solid var(--marvel-red);
+            background: transparent;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .phase-btn:hover, .phase-btn.active {
+            background: var(--marvel-red);
+            box-shadow: 0 0 20px rgba(236, 29, 36, 0.5);
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding: 2rem 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--marvel-red), var(--marvel-gold), var(--marvel-red));
+            border-radius: 2px;
+        }
+
+        .timeline-item {
+            position: relative;
+            width: 45%;
+            margin-bottom: 3rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .timeline-item:nth-child(odd) {
+            margin-left: auto;
+            padding-left: 3rem;
+        }
+
+        .timeline-item:nth-child(even) {
+            padding-right: 3rem;
+            text-align: right;
+        }
+
+        .timeline-item:nth-child(odd)::before,
+        .timeline-item:nth-child(even)::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: var(--marvel-red);
+            border: 3px solid var(--marvel-gold);
+            border-radius: 50%;
+            top: 0;
+        }
+
+        .timeline-item:nth-child(odd)::before {
+            left: -10px;
+        }
+
+        .timeline-item:nth-child(even)::before {
+            right: -10px;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .timeline-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-card:hover {
+            transform: scale(1.02);
+            border-color: var(--marvel-red);
+            box-shadow: 0 0 30px rgba(236, 29, 36, 0.3);
+        }
+
+        .timeline-year {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.25rem;
+            color: var(--marvel-gold);
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-type {
+            display: inline-block;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.85rem;
+            padding: 0.25rem 0.75rem;
+            background: rgba(236, 29, 36, 0.2);
+            color: var(--marvel-red);
+            border-radius: 20px;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .timeline-description {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .timeline-details {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .timeline-card.expanded .timeline-details {
+            display: block;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+        }
+
+        .detail-value {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        /* AI Assistant Section */
+        .ai-assistant-section {
+            margin-top: 4rem;
+            padding: 2rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .ai-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--marvel-red), var(--marvel-gold));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: white;
+        }
+
+        .ai-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.25rem;
+            color: var(--text-primary);
+        }
+
+        .ai-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .chat-messages {
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: 8px;
+        }
+
+        .chat-message {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            animation: messageIn 0.3s ease;
+        }
+
+        @keyframes messageIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chat-message.user {
+            background: rgba(236, 29, 36, 0.1);
+            border-left: 3px solid var(--marvel-red);
+            margin-left: 2rem;
+        }
+
+        .chat-message.ai {
+            background: rgba(253, 185, 39, 0.1);
+            border-left: 3px solid var(--marvel-gold);
+            margin-right: 2rem;
+        }
+
+        .message-label {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .chat-message.user .message-label {
+            color: var(--marvel-red);
+        }
+
+        .chat-message.ai .message-label {
+            color: var(--marvel-gold);
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 1rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Exo 2', sans-serif;
+            font-size: 1rem;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--marvel-red);
+        }
+
+        .chat-send {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--marvel-red), var(--marvel-dark));
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .chat-send:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(236, 29, 36, 0.5);
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 1rem;
+            color: var(--marvel-gold);
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .typing-indicator.active {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .timeline::before {
+                left: 20px;
+            }
+
+            .timeline-item {
+                width: 100%;
+                padding-left: 3rem !important;
+                padding-right: 0 !important;
+                text-align: left !important;
+            }
+
+            .timeline-item::before {
+                left: 10px !important;
+                right: auto !important;
+            }
+
+            .timeline-header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="logo" onclick="navigateTo('index')">NerdVerse</div>
+        <ul class="nav-links" id="nav-links">
+            <li><a href="index.html" data-page="home">Home</a></li>
+            <li><a href="wiki.html" data-page="wiki">Wiki</a></li>
+            <li><a href="guides.html" data-page="guides">Guides</a></li>
+            <li><a href="marvel.html" data-page="marvel" class="active">Marvel</a></li>
+            <li><a href="dcu.html" data-page="dcu">DCU</a></li>
+        </ul>
+        <div class="mobile-menu" onclick="toggleMobileMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </nav>
+
+    <div class="timeline-container">
+        <div class="timeline-header">
+            <h1>MARVEL CINEMATIC UNIVERSE</h1>
+            <p class="subtitle">Interactive Timeline</p>
+        </div>
+
+        <!-- Phase Filter -->
+        <div class="phase-filter">
+            <button class="phase-btn active" data-phase="all">All Phases</button>
+            <button class="phase-btn" data-phase="1">Phase 1</button>
+            <button class="phase-btn" data-phase="2">Phase 2</button>
+            <button class="phase-btn" data-phase="3">Phase 3</button>
+            <button class="phase-btn" data-phase="4">Phase 4</button>
+            <button class="phase-btn" data-phase="5">Phase 5</button>
+            <button class="phase-btn" data-phase="6">Phase 6</button>
+        </div>
+
+        <!-- Timeline -->
+        <div class="timeline" id="timeline">
+            <!-- Timeline items will be populated by JavaScript -->
+        </div>
+
+        <!-- AI Assistant -->
+        <div class="ai-assistant-section">
+            <div class="ai-header">
+                <div class="ai-avatar">J</div>
+                <div>
+                    <div class="ai-title">J.A.R.V.I.S. Assistant</div>
+                    <div class="ai-subtitle">Your personal Marvel universe guide</div>
+                </div>
+            </div>
+            <div class="chat-container">
+                <div class="chat-messages" id="marvel-chat-messages">
+                    <div class="chat-message ai">
+                        <div class="message-label">J.A.R.V.I.S.</div>
+                        <p>Greetings, Sir. I am J.A.R.V.I.S., your personal assistant for all things Marvel. Whether you seek clarification on the chronological order of the MCU, wish to understand the connections between various films and series, or require recommendations for where to begin your journey, I am at your service. How may I be of assistance?</p>
+                    </div>
+                </div>
+                <div class="typing-indicator" id="marvel-typing">Analyzing query...</div>
+                <div class="chat-input-area">
+                    <input type="text" class="chat-input" id="marvel-input" placeholder="Ask about the Marvel timeline...">
+                    <button class="chat-send" id="marvel-send">Query</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script>
+        // MCU Timeline Data
+        const mcuTimeline = [
+            { phase: 1, year: 2008, title: "Iron Man", type: "Film", order: 1, description: "Tony Stark builds a revolutionary suit after being kidnapped.", details: { director: "Jon Favreau", runtime: "126 min", boxOffice: "$585M" }},
+            { phase: 1, year: 2008, title: "The Incredible Hulk", type: "Film", order: 2, description: "Bruce Banner transforms into the Hulk while on the run.", details: { director: "Louis Leterrier", runtime: "112 min", boxOffice: "$265M" }},
+            { phase: 1, year: 2011, title: "Iron Man 2", type: "Film", order: 3, description: "Tony deals with new enemies while keeping his identity secret.", details: { director: "Jon Favreau", runtime: "124 min", boxOffice: "$623M" }},
+            { phase: 1, year: 2011, title: "Thor", type: "Film", order: 4, description: "Thor is exiled to Earth and must relearn his powers.", details: { director: "Kenneth Branagh", runtime: "115 min", boxOffice: "$449M" }},
+            { phase: 1, year: 2011, title: "Captain America: The First Avenger", type: "Film", order: 5, description: "Steve Rogers becomes Captain America during WWII.", details: { director: "Joe Johnston", runtime: "124 min", boxOffice: "$370M" }},
+            { phase: 1, year: 2012, title: "The Avengers", type: "Film", order: 6, description: "Earth's heroes unite to stop Loki and the Chitauri.", details: { director: "Joss Whedon", runtime: "143 min", boxOffice: "$1.52B" }},
+            { phase: 2, year: 2013, title: "Iron Man 3", type: "Film", order: 7, description: "Tony faces the Mandarin while dealing with his past.", details: { director: "Shane Black", runtime: "130 min", boxOffice: "$1.21B" }},
+            { phase: 2, year: 2013, title: "Thor: The Dark World", type: "Film", order: 8, description: "Thor battles the Dark Elves to protect the Nine Realms.", details: { director: "Alan Taylor", runtime: "112 min", boxOffice: "$639M" }},
+            { phase: 2, year: 2014, title: "Captain America: The Winter Soldier", type: "Film", order: 9, description: "Steve uncovers a conspiracy within S.H.I.E.L.D.", details: { director: "Anthony Russo, Joe Russo", runtime: "136 min", boxOffice: "$714M" }},
+            { phase: 2, year: 2014, title: "Guardians of the Galaxy", type: "Film", order: 10, description: "A group of outlaws team up to save the galaxy.", details: { director: "James Gunn", runtime: "121 min", boxOffice: "$773M" }},
+            { phase: 2, year: 2015, title: "Avengers: Age of Ultron", type: "Film", order: 11, description: "The Avengers face Ultron, an AI created by Tony.", details: { director: "Joss Whedon", runtime: "141 min", boxOffice: "$1.40B" }},
+            { phase: 2, year: 2015, title: "Ant-Man", type: "Film", order: 12, description: "Scott Lang inherits the Ant-Man suit.", details: { director: "Peyton Reed", runtime: "117 min", boxOffice: "$519M" }},
+            { phase: 3, year: 2016, title: "Captain America: Civil War", type: "Film", order: 13, description: "The Avengers split over government oversight.", details: { director: "Anthony Russo, Joe Russo", runtime: "147 min", boxOffice: "$1.15B" }},
+            { phase: 3, year: 2016, title: "Doctor Strange", type: "Film", order: 14, description: "A surgeon discovers the mystic arts.", details: { director: "Scott Derrickson", runtime: "115 min", boxOffice: "$677M" }},
+            { phase: 3, year: 2017, title: "Guardians of the Galaxy Vol. 2", type: "Film", order: 15, description: "The Guardians uncover Star-Lord's true heritage.", details: { director: "James Gunn", runtime: "136 min", boxOffice: "$863M" }},
+            { phase: 3, year: 2017, title: "Spider-Man: Homecoming", type: "Film", order: 16, description: "Peter Parker balances high school and heroics.", details: { director: "Jon Watts", runtime: "133 min", boxOffice: "$880M" }},
+            { phase: 3, year: 2017, title: "Thor: Ragnarok", type: "Film", order: 17, description: "Thor must stop Hela and save Asgard.", details: { director: "Taika Waititi", runtime: "130 min", boxOffice: "$855M" }},
+            { phase: 3, year: 2018, title: "Black Panther", type: "Film", order: 18, description: "T'Challa returns to Wakanda to face Killmonger.", details: { director: "Ryan Coogler", runtime: "134 min", boxOffice: "$1.35B" }},
+            { phase: 3, year: 2018, title: "Avengers: Infinity War", type: "Film", order: 19, description: "Thanos seeks the Infinity Stones.", details: { director: "Anthony Russo, Joe Russo", runtime: "149 min", boxOffice: "$2.05B" }},
+            { phase: 3, year: 2018, title: "Ant-Man and the Wasp", type: "Film", order: 20, description: "Scott teams up with Hope van Dyne.", details: { director: "Peyton Reed", runtime: "118 min", boxOffice: "$623M" }},
+            { phase: 3, year: 2019, title: "Captain Marvel", type: "Film", order: 21, description: "Carol Danvers becomes Captain Marvel in the 90s.", details: { director: "Anna Boden, Ryan Fleck", runtime: "123 min", boxOffice: "$1.13B" }},
+            { phase: 3, year: 2019, title: "Avengers: Endgame", type: "Film", order: 22, description: "The Avengers reverse Thanos' snap.", details: { director: "Anthony Russo, Joe Russo", runtime: "181 min", boxOffice: "$2.80B" }},
+            { phase: 3, year: 2019, title: "Spider-Man: Far From Home", type: "Film", order: 23, description: "Peter faces Mysterio in Europe.", details: { director: "Jon Watts", runtime: "129 min", boxOffice: "$1.13B" }},
+            { phase: 4, year: 2021, title: "WandaVision", type: "Series", order: 24, description: "Wanda creates a reality in Westview.", details: { episodes: 9, network: "Disney+", runtime: "30-50 min" }},
+            { phase: 4, year: 2021, title: "The Falcon and the Winter Soldier", type: "Series", order: 25, description: "Sam Wilson takes up the shield.", details: { episodes: 6, network: "Disney+", runtime: "50 min" }},
+            { phase: 4, year: 2021, title: "Loki", type: "Series", order: 26, description: "Loki faces the Time Variance Authority.", details: { episodes: 6, network: "Disney+", runtime: "45-50 min" }},
+            { phase: 4, year: 2021, title: "What If...?", type: "Series", order: 27, description: "Alternate realities in the MCU.", details: { episodes: 9, network: "Disney+", runtime: "30 min" }},
+            { phase: 4, year: 2021, title: "Shang-Chi and the Legend of the Ten Rings", type: "Film", order: 28, description: "Shang-Chi confronts his past.", details: { director: "Destin Daniel Cretton", runtime: "132 min", boxOffice: "$432M" }},
+            { phase: 4, year: 2021, title: "Eternals", type: "Film", order: 29, description: "Ancient beings reemerge.", details: { director: "Chloé Zhao", runtime: "157 min", boxOffice: "$402M" }},
+            { phase: 4, year: 2021, title: "Hawkeye", type: "Series", order: 30, description: "Clint passes the torch to Kate Bishop.", details: { episodes: 6, network: "Disney+", runtime: "45-50 min" }},
+            { phase: 4, year: 2022, title: "Moon Knight", type: "Series", order: 31, description: "Marc Spector deals with dissociative identity disorder.", details: { episodes: 6, network: "Disney+", runtime: "45-50 min" }},
+            { phase: 4, year: 2022, title: "Doctor Strange in the Multiverse of Madness", type: "Film", order: 32, description: "Strange explores the multiverse.", details: { director: "Sam Raimi", runtime: "126 min", boxOffice: "$955M" }},
+            { phase: 4, year: 2022, title: "Ms. Marvel", type: "Series", order: 33, description: "Kamala Khan discovers her powers.", details: { episodes: 6, network: "Disney+", runtime: "35-50 min" }},
+            { phase: 4, year: 2022, title: "Thor: Love and Thunder", type: "Film", order: 34, description: "Thor and Jane fight Gorr.", details: { director: "Taika Waititi", runtime: "119 min", boxOffice: "$761M" }},
+            { phase: 4, year: 2022, title: "She-Hulk: Attorney at Law", type: "Series", order: 35, description: "Jennifer Walters practices law.", details: { episodes: 9, network: "Disney+", runtime: "30-40 min" }},
+            { phase: 4, year: 2022, title: "Black Panther: Wakanda Forever", type: "Film", order: 36, description: "Wakanda mourns T'Challa.", details: { director: "Ryan Coogler", runtime: "161 min", boxOffice: "$859M" }},
+            { phase: 5, year: 2023, title: "Ant-Man and the Wasp: Quantumania", type: "Film", order: 37, description: "Scott meets Kang the Conqueror.", details: { director: "Peyton Reed", runtime: "125 min", boxOffice: "$476M" }},
+            { phase: 5, year: 2023, title: "Guardians of the Galaxy Vol. 3", type: "Film", order: 38, description: "The Guardians save Rocket.", details: { director: "James Gunn", runtime: "150 min", boxOffice: "$845M" }},
+            { phase: 5, year: 2023, title: "Secret Invasion", type: "Series", order: 39, description: "Skrulls have infiltrated Earth.", details: { episodes: 6, network: "Disney+", runtime: "45-50 min" }},
+            { phase: 5, year: 2023, title: "The Marvels", type: "Film", order: 40, description: "Carol, Kamala, and Monica switch places.", details: { director: "Nia DaCosta", runtime: "105 min", boxOffice: "$206M" }},
+            { phase: 5, year: 2024, title: "Daredevil: Born Again", type: "Series", order: 41, description: "Matt Murdock returns as Daredevil.", details: { episodes: 18, network: "Disney+", runtime: "45-60 min" }},
+            { phase: 5, year: 2024, title: "Captain America: Brave New World", type: "Film", order: 42, description: "Sam Wilson as Captain America.", details: { director: "Julius Onah", runtime: "118 min", boxOffice: "$450M" }},
+            { phase: 6, year: 2025, title: "Thunderbolts*", type: "Film", order: 43, description: "A new team assembles.", details: { director: "Jake Schreier", runtime: "TBD", boxOffice: "TBD" }},
+            { phase: 6, year: 2025, title: "Fantastic Four", type: "Film", order: 44, description: "The First Family arrives.", details: { director: "Matt Shakman", runtime: "TBD", boxOffice: "TBD" }},
+            { phase: 6, year: 2026, title: "Avengers: Doomsday", type: "Film", order: 45, description: "The next Avengers event.", details: { director: "Anthony Russo, Joe Russo", runtime: "TBD", boxOffice: "TBD" }},
+            { phase: 6, year: 2027, title: "Avengers: Secret Wars", type: "Film", order: 46, description: "The multiverse collides.", details: { director: "Anthony Russo, Joe Russo", runtime: "TBD", boxOffice: "TBD" }}
+        ];
+
+        // Populate timeline
+        function populateTimeline(phase = 'all') {
+            const timeline = document.getElementById('timeline');
+            timeline.innerHTML = '';
+
+            const filtered = phase === 'all' 
+                ? mcuTimeline 
+                : mcuTimeline.filter(item => item.phase === parseInt(phase));
+
+            filtered.forEach((item, index) => {
+                const timelineItem = document.createElement('div');
+                timelineItem.className = 'timeline-item';
+                timelineItem.style.animationDelay = `${index * 0.1}s`;
+
+                let detailsHtml = '';
+                for (const [key, value] of Object.entries(item.details)) {
+                    detailsHtml += `<div class="detail-row"><span class="detail-label">${key.charAt(0).toUpperCase() + key.slice(1)}:</span><span class="detail-value">${value}</span></div>`;
+                }
+
+                timelineItem.innerHTML = `
+                    <div class="timeline-card" onclick="toggleCard(this)">
+                        <div class="timeline-year">${item.year}</div>
+                        <div class="timeline-type">${item.type}</div>
+                        <div class="timeline-title">${item.title}</div>
+                        <div class="timeline-description">${item.description}</div>
+                        <div class="timeline-details">${detailsHtml}</div>
+                    </div>
+                `;
+
+                timeline.appendChild(timelineItem);
+            });
+        }
+
+        // Toggle card expansion
+        function toggleCard(card) {
+            card.classList.toggle('expanded');
+        }
+
+        // Phase filter
+        document.querySelectorAll('.phase-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.phase-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                populateTimeline(btn.dataset.phase);
+            });
+        });
+
+        // Initialize
+        populateTimeline();
+
+        // Chat functionality
+        const marvelInput = document.getElementById('marvel-input');
+        const marvelSend = document.getElementById('marvel-send');
+        const marvelMessages = document.getElementById('marvel-chat-messages');
+        const marvelTyping = document.getElementById('marvel-typing');
+
+        async function sendMarvelMessage() {
+            const message = marvelInput.value.trim();
+            if (!message) return;
+
+            // Add user message
+            const userMsg = document.createElement('div');
+            userMsg.className = 'chat-message user';
+            userMsg.innerHTML = `<div class="message-label">You</div><p>${message}</p>`;
+            marvelMessages.appendChild(userMsg);
+
+            marvelInput.value = '';
+            marvelTyping.classList.add('active');
+            marvelMessages.scrollTop = marvelMessages.scrollHeight;
+
+            try {
+                const response = await getAIResponse('marvel', message);
+                marvelTyping.classList.remove('active');
+
+                const aiMsg = document.createElement('div');
+                aiMsg.className = 'chat-message ai';
+                aiMsg.innerHTML = `<div class="message-label">J.A.R.V.I.S.</div><p>${response}</p>`;
+                marvelMessages.appendChild(aiMsg);
+
+                marvelMessages.scrollTop = marvelMessages.scrollHeight;
+            } catch (error) {
+                marvelTyping.classList.remove('active');
+                console.error('Chat error:', error);
+            }
+        }
+
+        marvelSend.addEventListener('click', sendMarvelMessage);
+        marvelInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMarvelMessage();
+        });
+    </script>
+</body>
+</html>

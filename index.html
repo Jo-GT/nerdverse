@@ -12,13 +12,13 @@
 <body>
     <!-- Navigation -->
     <nav>
-        <div class="logo" onclick="navigateTo('index')">ComicHelper</div>
+        <div class="logo" onclick="navigateTo('index')">NerdVerse</div>
         <ul class="nav-links" id="nav-links">
             <li><a href="index.html" class="active" data-page="home">Home</a></li>
             <li><a href="wiki.html" data-page="wiki">Wiki</a></li>
             <li><a href="guides.html" data-page="guides">Guides</a></li>
-            <li><a href="recommendations.html" data-page="recommendations">Recommendations</a></li>
-            <li><a href="personalized.html" data-page="personalized">Personalized Picks</a></li>
+            <li><a href="marvel.html" data-page="marvel">Marvel</a></li>
+            <li><a href="dcu.html" data-page="dcu">DCU</a></li>
         </ul>
         <div class="mobile-menu" onclick="toggleMobileMenu()">
             <span></span>
@@ -31,33 +31,36 @@
     <main>
         <!-- Hero Section -->
         <section class="hero">
-            <h1>ComicHelper</h1>
-            <p class="tagline">Your AI-powered companion for <span>comic recommendations</span>, <span>wikis</span>, and <span>guides</span></p>
+            <h1>NerdVerse</h1>
+            <p class="tagline">Your AI-powered companion powered by <span>J.A.R.V.I.S.</span> for <span>comic recommendations</span>, <span>wikis</span>, and <span>cinematic universes</span></p>
             <div class="hero-buttons">
-                <button class="btn btn-primary" onclick="navigateTo('wiki')">📚 Ask the Wiki</button>
-                <button class="btn btn-secondary" onclick="navigateTo('guides')">📖 Get Guides</button>
-                <button class="btn btn-outline" onclick="navigateTo('recommendations')">🎯 Get Recommendations</button>
+                <button class="btn btn-primary" onclick="navigateTo('marvel')">⚡ Marvel Universe</button>
+                <button class="btn btn-secondary" onclick="navigateTo('dcu')">🦇 DCU Timeline</button>
+                <button class="btn btn-outline" onclick="navigateTo('wiki')">📚 Ask J.A.R.V.I.S.</button>
             </div>
         </section>
 
         <!-- Assistant Cards -->
         <div class="assistant-grid">
+            <div class="assistant-card" onclick="navigateTo('marvel')">
+                <div class="assistant-icon">⚡</div>
+                <h3>Marvel Cinematic Universe</h3>
+                <p>Explore the complete MCU timeline from Iron Man to Avengers: Secret Wars. Interactive chronological guide with AI assistance.</p>
+                <button class="btn btn-primary">Explore MCU</button>
+            </div>
+            <div class="assistant-card" onclick="navigateTo('dcu')">
+                <div class="assistant-icon">🦇</div>
+                <h3>DC Cinematic Universe</h3>
+                <p>Navigate the DC Extended Universe and new DCU reboot. From Man of Steel to the new Gods & Monsters era.</p>
+                <button class="btn btn-secondary">Explore DCU</button>
+            </div>
             <div class="assistant-card" onclick="navigateTo('wiki')">
-                <div class="assistant-icon">📚</div>
-                <h3>Wiki Assistant</h3>
-                <p>Ask anything about comic characters, storylines, events, and universes. Get detailed information powered by AI.</p>
-                <button class="btn btn-primary">Launch Wiki</button>
+                <div class="assistant-icon">🤖</div>
+                <h3>J.A.R.V.I.S. Assistant</h3>
+                <p>Your personal AI assistant for comic characters, storylines, events, and universe lore. Powered by J.A.R.V.I.S.</p>
+                <button class="btn btn-outline">Consult J.A.R.V.I.S.</button>
             </div>
-            <div class="assistant-card" onclick="navigateTo('guides')">
-                <div class="assistant-icon">📖</div>
-                <h3>Guide Assistant</h3>
-                <p>New to comics? Get beginner guides, reading orders, and series recommendations tailored to your interests.</p>
-                <button class="btn btn-secondary">Launch Guides</button>
-            </div>
-            <div class="assistant-card" onclick="navigateTo('recommendations')">
-                <div class="assistant-icon">🎯</div>
-                <h3>Recommendations</h3>
-                <p>Based on your favorite hero, trope, or movie adaptation, get personalized comic recommendations.</p>
+        </div>
                 <button class="btn btn-outline">Get Recommendations</button>
             </div>
         </div>

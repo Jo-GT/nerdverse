@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DC Cinematic Universe Timeline | NerdVerse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        :root {
+            --dcu-blue: #0476f2;
+            --dcu-red: #e61924;
+            --dcu-gold: #ffd700;
+            --dcu-dark: #0c1e3b;
+        }
+
+        .timeline-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 120px 2rem 4rem;
+        }
+
+        .timeline-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .timeline-header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.5rem;
+            background: linear-gradient(135deg, var(--dcu-blue), var(--dcu-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 60px rgba(4, 118, 242, 0.5);
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-header .subtitle {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+
+        /* Era Filter */
+        .era-filter {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 3rem;
+        }
+
+        .era-btn {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border: 2px solid var(--dcu-blue);
+            background: transparent;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .era-btn:hover, .era-btn.active {
+            background: var(--dcu-blue);
+            box-shadow: 0 0 20px rgba(4, 118, 242, 0.5);
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding: 2rem 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--dcu-blue), var(--dcu-gold), var(--dcu-red));
+            border-radius: 2px;
+        }
+
+        .timeline-item {
+            position: relative;
+            width: 45%;
+            margin-bottom: 3rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .timeline-item:nth-child(odd) {
+            margin-left: auto;
+            padding-left: 3rem;
+        }
+
+        .timeline-item:nth-child(even) {
+            padding-right: 3rem;
+            text-align: right;
+        }
+
+        .timeline-item:nth-child(odd)::before,
+        .timeline-item:nth-child(even)::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: var(--dcu-blue);
+            border: 3px solid var(--dcu-gold);
+            border-radius: 50%;
+            top: 0;
+        }
+
+        .timeline-item:nth-child(odd)::before {
+            left: -10px;
+        }
+
+        .timeline-item:nth-child(even)::before {
+            right: -10px;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .timeline-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-card:hover {
+            transform: scale(1.02);
+            border-color: var(--dcu-blue);
+            box-shadow: 0 0 30px rgba(4, 118, 242, 0.3);
+        }
+
+        .timeline-year {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.25rem;
+            color: var(--dcu-gold);
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-type {
+            display: inline-block;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.85rem;
+            padding: 0.25rem 0.75rem;
+            background: rgba(4, 118, 242, 0.2);
+            color: var(--dcu-blue);
+            border-radius: 20px;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .timeline-description {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .timeline-details {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .timeline-card.expanded .timeline-details {
+            display: block;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+        }
+
+        .detail-value {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        /* Universe Toggle */
+        .universe-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .universe-btn {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            padding: 1rem 2rem;
+            border: 2px solid;
+            background: transparent;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .universe-btn.dcu-active {
+            border-color: var(--dcu-blue);
+            background: rgba(4, 118, 242, 0.2);
+            box-shadow: 0 0 20px rgba(4, 118, 242, 0.3);
+        }
+
+        .universe-btn.reboot-active {
+            border-color: var(--dcu-red);
+            background: rgba(230, 25, 36, 0.2);
+            box-shadow: 0 0 20px rgba(230, 25, 36, 0.3);
+        }
+
+        /* AI Assistant Section */
+        .ai-assistant-section {
+            margin-top: 4rem;
+            padding: 2rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .ai-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--dcu-blue), var(--dcu-gold));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: white;
+        }
+
+        .ai-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.25rem;
+            color: var(--text-primary);
+        }
+
+        .ai-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .chat-messages {
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: 8px;
+        }
+
+        .chat-message {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            animation: messageIn 0.3s ease;
+        }
+
+        @keyframes messageIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chat-message.user {
+            background: rgba(4, 118, 242, 0.1);
+            border-left: 3px solid var(--dcu-blue);
+            margin-left: 2rem;
+        }
+
+        .chat-message.ai {
+            background: rgba(255, 215, 0, 0.1);
+            border-left: 3px solid var(--dcu-gold);
+            margin-right: 2rem;
+        }
+
+        .message-label {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .chat-message.user .message-label {
+            color: var(--dcu-blue);
+        }
+
+        .chat-message.ai .message-label {
+            color: var(--dcu-gold);
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 1rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Exo 2', sans-serif;
+            font-size: 1rem;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--dcu-blue);
+        }
+
+        .chat-send {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--dcu-blue), var(--dcu-dark));
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .chat-send:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(4, 118, 242, 0.5);
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 1rem;
+            color: var(--dcu-gold);
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .typing-indicator.active {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .timeline::before {
+                left: 20px;
+            }
+
+            .timeline-item {
+                width: 100%;
+                padding-left: 3rem !important;
+                padding-right: 0 !important;
+                text-align: left !important;
+            }
+
+            .timeline-item::before {
+                left: 10px !important;
+                right: auto !important;
+            }
+
+            .timeline-header h1 {
+                font-size: 2rem;
+            }
+
+            .universe-toggle {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="logo" onclick="navigateTo('index')">NerdVerse</div>
+        <ul class="nav-links" id="nav-links">
+            <li><a href="index.html" data-page="home">Home</a></li>
+            <li><a href="wiki.html" data-page="wiki">Wiki</a></li>
+            <li><a href="guides.html" data-page="guides">Guides</a></li>
+            <li><a href="marvel.html" data-page="marvel">Marvel</a></li>
+            <li><a href="dcu.html" data-page="dcu" class="active">DCU</a></li>
+        </ul>
+        <div class="mobile-menu" onclick="toggleMobileMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </nav>
+
+    <div class="timeline-container">
+        <div class="timeline-header">
+            <h1>DC CINEMATIC UNIVERSE</h1>
+            <p class="subtitle">Interactive Timeline</p>
+        </div>
+
+        <!-- Universe Toggle -->
+        <div class="universe-toggle">
+            <button class="universe-btn dcu-active" id="dcu-era-btn">DC Extended Universe (DCEU)</button>
+            <button class="universe-btn" id="reboot-era-btn">DC Universe (DCU) Reboot</button>
+        </div>
+
+        <!-- Era Filter -->
+        <div class="era-filter" id="dcu-filters">
+            <button class="era-btn active" data-era="all">All Films</button>
+            <button class="era-btn" data-era="phase1">Phase 1 (2013-2016)</button>
+            <button class="era-btn" data-era="phase2">Phase 2 (2017-2020)</button>
+            <button class="era-btn" data-era="phase3">Phase 3 (2021-2023)</button>
+        </div>
+
+        <div class="era-filter" id="reboot-filters" style="display: none;">
+            <button class="era-btn active" data-era="reboot">All Films</button>
+            <button class="era-btn" data-era="gods">Gods & Monsters</button>
+            <button class="era-btn" data-era="legacy">Legacy</button>
+        </div>
+
+        <!-- Timeline -->
+        <div class="timeline" id="timeline">
+            <!-- Timeline items will be populated by JavaScript -->
+        </div>
+
+        <!-- AI Assistant -->
+        <div class="ai-assistant-section">
+            <div class="ai-header">
+                <div class="ai-avatar">J</div>
+                <div>
+                    <div class="ai-title">J.A.R.V.I.S. Assistant</div>
+                    <div class="ai-subtitle">Your personal DC universe guide</div>
+                </div>
+            </div>
+            <div class="chat-container">
+                <div class="chat-messages" id="dcu-chat-messages">
+                    <div class="chat-message ai">
+                        <div class="message-label">J.A.R.V.I.S.</div>
+                        <p>Greetings, Sir. I am J.A.R.V.I.S., your personal assistant for all things DC. Whether you wish to understand the chronology of the DC Extended Universe, navigate the recent DCU reboot, or explore the connections between various films and television series, I am at your service. How may I be of assistance?</p>
+                    </div>
+                </div>
+                <div class="typing-indicator" id="dcu-typing">Analyzing query...</div>
+                <div class="chat-input-area">
+                    <input type="text" class="chat-input" id="dcu-input" placeholder="Ask about the DC timeline...">
+                    <button class="chat-send" id="dcu-send">Query</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script>
+        // DC Timeline Data - DCEU (Original)
+        const dceuTimeline = [
+            { phase: 1, year: 2013, title: "Man of Steel", type: "Film", order: 1, description: "Clark Kent embraces his Kryptonian heritage.", details: { director: "Zack Snyder", runtime: "143 min", universe: "DCEU" }},
+            { phase: 1, year: 2016, title: "Batman v Superman: Dawn of Justice", type: "Film", order: 2, description: "Batman and Superman clash before uniting against a common threat.", details: { director: "Zack Snyder", runtime: "151 min", universe: "DCEU" }},
+            { phase: 1, year: 2016, title: "Suicide Squad", type: "Film", order: 3, description: "A team of villains is assembled for a dangerous mission.", details: { director: "David Ayer", runtime: "123 min", universe: "DCEU" }},
+            { phase: 2, year: 2017, title: "Wonder Woman", type: "Film", order: 4, description: "Diana Prince fights alongside WWI soldiers.", details: { director: "Patty Jenkins", runtime: "141 min", universe: "DCEU" }},
+            { phase: 2, year: 2017, title: "Justice League", type: "Film", order: 5, description: "Earth's greatest heroes unite to face an alien threat.", details: { director: "Zack Snyder", runtime: "120 min", universe: "DCEU" }},
+            { phase: 2, year: 2018, title: "Aquaman", type: "Film", order: 6, description: "Arthur Curry must claim his throne as King of Atlantis.", details: { director: "James Wan", runtime: "143 min", universe: "DCEU" }},
+            { phase: 2, year: 2019, title: "Shazam!", type: "Film", order: 7, description: "A boy gains the power to become an adult superhero.", details: { director: "David F. Sandberg", runtime: "132 min", universe: "DCEU" }},
+            { phase: 3, year: 2019, title: "Joker", type: "Film", order: 8, description: "Arthur Fleck descends into madness in Gotham.", details: { director: "Todd Phillips", runtime: "122 min", universe: "DC Black" }},
+            { phase: 3, year: 2020, title: "Birds of Prey", type: "Film", order: 9, description: "Harley Quinn assembles a team of female heroes.", details: { director: "Cathy Yan", runtime: "109 min", universe: "DCEU" }},
+            { phase: 3, year: 2021, title: "The Suicide Squad", type: "Film", order: 10, description: "A new task force is sent on a mission in Corto Maltese.", details: { director: "James Gunn", runtime: "132 min", universe: "DCEU" }},
+            { phase: 3, year: 2022, title: "The Batman", type: "Film", order: 11, description: "Batman investigates corruption in Gotham.", details: { director: "Matt Reeves", runtime: "176 min", universe: "The Batman" }},
+            { phase: 3, year: 2022, title: "Black Adam", type: "Film", order: 12, description: "Teth-Adam is freed after 5,000 years.", details: { director: "Jaume Collet-Serra", runtime: "125 min", universe: "DCEU" }},
+            { phase: 3, year: 2023, title: "Shazam! Fury of the Gods", type: "Film", order: 13, description: "The Shazamily faces the Daughters of Atlas.", details: { director: "David F. Sandberg", runtime: "130 min", universe: "DCEU" }},
+            { phase: 3, year: 2023, title: "The Flash", type: "Film", order: 14, description: "Barry Allen travels through time to save his mother.", details: { director: "Andy Muschietti", runtime: "144 min", universe: "DCEU" }},
+            { phase: 3, year: 2023, title: "Blue Beetle", type: "Film", order: 15, description: "Jaime Reyes inherits the Scarab.", details: { director: "Angel Manuel Soto", runtime: "127 min", universe: "DCEU" }}
+        ];
+
+        // DCU Reboot Timeline
+        const dcuRebootTimeline = [
+            { phase: 'gods', year: 2025, title: "Superman", type: "Film", order: 1, description: "Clark Kent begins his journey as Superman.", details: { director: "James Gunn", runtime: "TBD", universe: "DCU" }},
+            { phase: 'gods', year: 2025, title: "Supergirl: Woman of Tomorrow", type: "Film", order: 2, description: "Kara Zor-El's story in the new universe.", details: { director: "Milton Steiner", runtime: "TBD", universe: "DCU" }},
+            { phase: 'gods', year: 2026, title: "Batman: The Brave and the Bold", type: "Film", order: 3, description: "Batman takes on a new villain.", details: { director: "Andy Muschietti", runtime: "TBD", universe: "DCU" }},
+            { phase: 'gods', year: 2026, title: "Wonder Woman", type: "Film", order: 4, description: "Diana's new adventure in the DCU.", details: { director: "TBD", runtime: "TBD", universe: "DCU" }},
+            { phase: 'legacy', year: 2027, title: "Justice League", type: "Film", order: 5, description: "The team assembles in the new universe.", details: { director: "TBD", runtime: "TBD", universe: "DCU" }},
+            { phase: 'legacy', year: 2027, title: "The Authority", type: "Film", order: 6, description: "A new superhero team emerges.", details: { director: "TBD", runtime: "TBD", universe: "DCU" }}
+        ];
+
+        let currentUniverse = 'dceu';
+
+        // Populate timeline
+        function populateTimeline(era = 'all') {
+            const timeline = document.getElementById('timeline');
+            timeline.innerHTML = '';
+
+            const data = currentUniverse === 'dceu' ? dceuTimeline : dcuRebootTimeline;
+            const filtered = era === 'all' || era === 'reboot'
+                ? data 
+                : data.filter(item => item.phase === era);
+
+            filtered.forEach((item, index) => {
+                const timelineItem = document.createElement('div');
+                timelineItem.className = 'timeline-item';
+                timelineItem.style.animationDelay = `${index * 0.1}s`;
+
+                let detailsHtml = '';
+                for (const [key, value] of Object.entries(item.details)) {
+                    detailsHtml += `<div class="detail-row"><span class="detail-label">${key.charAt(0).toUpperCase() + key.slice(1)}:</span><span class="detail-value">${value}</span></div>`;
+                }
+
+                timelineItem.innerHTML = `
+                    <div class="timeline-card" onclick="toggleCard(this)">
+                        <div class="timeline-year">${item.year}</div>
+                        <div class="timeline-type">${item.type}</div>
+                        <div class="timeline-title">${item.title}</div>
+                        <div class="timeline-description">${item.description}</div>
+                        <div class="timeline-details">${detailsHtml}</div>
+                    </div>
+                `;
+
+                timeline.appendChild(timelineItem);
+            });
+        }
+
+        // Toggle card expansion
+        function toggleCard(card) {
+            card.classList.toggle('expanded');
+        }
+
+        // Universe toggle
+        document.getElementById('dcu-era-btn').addEventListener('click', () => {
+            currentUniverse = 'dceu';
+            document.getElementById('dcu-era-btn').classList.add('dcu-active');
+            document.getElementById('reboot-era-btn').classList.remove('reboot-active');
+            document.getElementById('dcu-filters').style.display = 'flex';
+            document.getElementById('reboot-filters').style.display = 'none';
+            populateTimeline();
+        });
+
+        document.getElementById('reboot-era-btn').addEventListener('click', () => {
+            currentUniverse = 'dcu';
+            document.getElementById('dcu-era-btn').classList.remove('dcu-active');
+            document.getElementById('reboot-era-btn').classList.add('reboot-active');
+            document.getElementById('dcu-filters').style.display = 'none';
+            document.getElementById('reboot-filters').style.display = 'flex';
+            populateTimeline('reboot');
+        });
+
+        // Era filter for DCEU
+        document.querySelectorAll('#dcu-filters .era-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#dcu-filters .era-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                populateTimeline(btn.dataset.era);
+            });
+        });
+
+        // Era filter for Reboot
+        document.querySelectorAll('#reboot-filters .era-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#reboot-filters .era-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                populateTimeline(btn.dataset.era);
+            });
+        });
+
+        // Initialize
+        populateTimeline();
+
+        // Chat functionality
+        const dcuInput = document.getElementById('dcu-input');
+        const dcuSend = document.getElementById('dcu-send');
+        const dcuMessages = document.getElementById('dcu-chat-messages');
+        const dcuTyping = document.getElementById('dcu-typing');
+
+        async function sendDcuMessage() {
+            const message = dcuInput.value.trim();
+            if (!message) return;
+
+            // Add user message
+            const userMsg = document.createElement('div');
+            userMsg.className = 'chat-message user';
+            userMsg.innerHTML = `<div class="message-label">You</div><p>${message}</p>`;
+            dcuMessages.appendChild(userMsg);
+
+            dcuInput.value = '';
+            dcuTyping.classList.add('active');
+            dcuMessages.scrollTop = dcuMessages.scrollHeight;
+
+            try {
+                const response = await getAIResponse('dcu', message);
+                dcuTyping.classList.remove('active');
+
+                const aiMsg = document.createElement('div');
+                aiMsg.className = 'chat-message ai';
+                aiMsg.innerHTML = `<div class="message-label">J.A.R.V.I.S.</div><p>${response}</p>`;
+                dcuMessages.appendChild(aiMsg);
+
+                dcuMessages.scrollTop = dcuMessages.scrollHeight;
+            } catch (error) {
+                dcuTyping.classList.remove('active');
+                console.error('Chat error:', error);
+            }
+        }
+
+        dcuSend.addEventListener('click', sendDcuMessage);
+        dcuInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendDcuMessage();
+        });
+    </script>
+</body>
+</html>
