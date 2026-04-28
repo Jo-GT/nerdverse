@@ -359,6 +359,107 @@
             box-shadow: 0 0 20px rgba(236, 29, 36, 0.5);
         }
 
+        /* TTS Controls */
+        .tts-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 0.75rem 1rem;
+            background: var(--bg);
+            border-radius: 8px;
+        }
+
+        .tts-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .tts-toggle input {
+            display: none;
+        }
+
+        .tts-toggle .toggle-switch {
+            width: 44px;
+            height: 24px;
+            background: var(--border);
+            border-radius: 12px;
+            position: relative;
+            transition: background 0.3s ease;
+        }
+
+        .tts-toggle .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background: var(--text-primary);
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: transform 0.3s ease;
+        }
+
+        .tts-toggle input:checked + .toggle-switch {
+            background: var(--marvel-red);
+        }
+
+        .tts-toggle input:checked + .toggle-switch::after {
+            transform: translateX(20px);
+        }
+
+        .tts-label {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .voice-select {
+            padding: 0.5rem 1rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .voice-select:focus {
+            outline: none;
+            border-color: var(--marvel-red);
+        }
+
+        .speaker-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .speaker-btn:hover {
+            background: rgba(236, 29, 36, 0.2);
+            color: var(--marvel-red);
+        }
+
+        .speaker-btn.speaking {
+            color: var(--marvel-red);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
         .typing-indicator {
             display: none;
             padding: 1rem;
@@ -444,6 +545,25 @@
                     <div class="ai-subtitle">Your personal Marvel universe guide</div>
                 </div>
             </div>
+            
+            <!-- TTS Controls -->
+            <div class="tts-controls">
+                <label class="tts-toggle">
+                    <input type="checkbox" id="marvel-tts-enabled">
+                    <span class="toggle-switch"></span>
+                    <span class="tts-label">Voice Output</span>
+                </label>
+                <select class="voice-select" id="marvel-voice-select">
+                    <option value="">Loading voices...</option>
+                </select>
+                <button class="speaker-btn" id="marvel-speak-btn" title="Speak last response">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                    </svg>
+                </button>
+            </div>
+
             <div class="chat-container">
                 <div class="chat-messages" id="marvel-chat-messages">
                     <div class="chat-message ai">
@@ -602,6 +722,71 @@
         marvelInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMarvelMessage();
         });
+
+        // TTS Functionality
+        const marvelTtsEnabled = document.getElementById('marvel-tts-enabled');
+        const marvelVoiceSelect = document.getElementById('marvel-voice-select');
+        const marvelSpeakBtn = document.getElementById('marvel-speak-btn');
+        let marvelVoices = [];
+        let lastMarvelResponse = '';
+
+        // Load available voices
+        function loadMarvelVoices() {
+            const voices = speechSynthesis.getVoices();
+            marvelVoices = voices;
+            marvelVoiceSelect.innerHTML = voices.map((voice, i) => 
+                `<option value="${i}">${voice.name} (${voice.lang})</option>`
+            ).join('');
+            
+            // Try to find a British/English voice
+            const preferredVoice = voices.find(v => 
+                v.name.includes('British') || v.name.includes('Daniel') || v.name.includes('Google UK English')
+            );
+            if (preferredVoice) {
+                marvelVoiceSelect.value = voices.indexOf(preferredVoice);
+            }
+        }
+
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadMarvelVoices;
+        }
+
+        // Speak last response
+        function speakMarvelResponse() {
+            if (!lastMarvelResponse) return;
+            
+            speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(lastMarvelResponse);
+            const selectedVoice = marvelVoices[marvelVoiceSelect.value];
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
+            }
+            utterance.rate = 0.9;
+            utterance.pitch = 0.9;
+            
+            marvelSpeakBtn.classList.add('speaking');
+            utterance.onend = () => marvelSpeakBtn.classList.remove('speaking');
+            utterance.onerror = () => marvelSpeakBtn.classList.remove('speaking');
+            
+            speechSynthesis.speak(utterance);
+        }
+
+        marvelSpeakBtn.addEventListener('click', speakMarvelResponse);
+
+        // Auto-speak when enabled
+        const originalSendMarvelMessage = sendMarvelMessage;
+        sendMarvelMessage = async function() {
+            await originalSendMarvelMessage();
+            
+            if (marvelTtsEnabled.checked) {
+                const messages = marvelMessages.querySelectorAll('.chat-message.ai');
+                if (messages.length > 0) {
+                    lastMarvelResponse = messages[messages.length - 1].querySelector('p').textContent;
+                    setTimeout(speakMarvelResponse, 500);
+                }
+            }
+        };
     </script>
 </body>
 </html>
