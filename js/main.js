@@ -292,34 +292,221 @@ async function getRecommendations() {
 
     try {
         const prompt = buildRecommendationPrompt(hero, trope, movie, selectedGenres);
-        const response = await fetch(OLLAMA_URL, {
-            method: 'POST',
+        
+        // Try the local API endpoint first
+        const response = await fetch('/api/recommend?preferences=' + encodeURIComponent(prompt), {
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: DEFAULT_MODEL,
-                prompt: prompt,
-                stream: false
-            })
+            }
         });
 
         if (!response.ok) {
-            throw new Error('Ollama is not running');
+            throw new Error('API endpoint not available');
         }
 
         const data = await response.json();
-        const recommendations = parseRecommendations(data.response);
-        displayRecommendations(recommendations);
+        
+        if (data.comics && data.comics.length > 0) {
+            displayComicsWithMarvelData(data.comics, data.ai_analysis, data.ollama_available);
+        } else {
+            throw new Error('No comics returned');
+        }
     } catch (error) {
-        resultsContainer.innerHTML = `
-            <div class="error-message">
-                <p>⚠️ ${error.message}</p>
-                <p>Make sure <a href="https://ollama.com" target="_blank">Ollama</a> is running on your computer.</p>
-                <button class="btn btn-outline" onclick="getRecommendations()" style="margin-top: 1rem;">Retry</button>
-            </div>
-        `;
+        console.log('API failed, using fallback:', error.message);
+        
+        // Fallback: Use mock data directly without API
+        try {
+            const mockComics = getLocalMockComics(hero, trope, movie, selectedGenres);
+            displayComicsWithMarvelData(mockComics, null, false);
+        } catch (fallbackError) {
+            // Final fallback: Try Ollama directly
+            try {
+                const ollamaResponse = await fetch(OLLAMA_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: DEFAULT_MODEL,
+                        prompt: buildRecommendationPrompt(hero, trope, movie, selectedGenres),
+                        stream: false
+                    })
+                });
+                
+                if (!ollamaResponse.ok) {
+                    throw new Error('Ollama is not running');
+                }
+
+                const ollamaData = await ollamaResponse.json();
+                const recommendations = parseRecommendations(ollamaData.response);
+                displayRecommendations(recommendations);
+            } catch (ollamaError) {
+                resultsContainer.innerHTML = `
+                    <div class="error-message">
+                        <p>⚠️ Unable to get recommendations</p>
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+                            Both the local API and Ollama are unavailable.<br>
+                            Make sure Python server is running (<code>python app.py</code>)
+                            and Ollama is started (<code>ollama serve</code>).
+                        </p>
+                        <button class="btn btn-outline" onclick="getRecommendations()" style="margin-top: 1rem;">Retry</button>
+                    </div>
+                `;
+            }
+        }
     }
+}
+
+/**
+ * Get local mock comics based on preferences
+ */
+function getLocalMockComics(hero, trope, movie, genres) {
+    const allComics = [
+        {
+            'id': 1,
+            'title': 'Amazing Spider-Man #1',
+            'description': 'Peter Parker balancing life as a college student and Spider-Man. A new era begins!',
+            'image': 'https://upload.wikimedia.org/wikipedia/en/0/00/The_Amazing_Spider-Man_vol_2_1.jpg',
+            'price': '$3.99',
+            'page_count': 128,
+            'series': 'Amazing Spider-Man (2022)',
+            'issue_number': 1,
+            'characters': ['Spider-Man', 'Mary Jane', 'Green Goblin'],
+            'creators': ['Zeb Wells', 'John Romita Jr.']
+        },
+        {
+            'id': 2,
+            'title': 'Batman #1',
+            'description': 'Gotham City\'s darkest days begin. A new Batman rises to face the shadows.',
+            'image': 'https://upload.wikimedia.org/wikipedia/en/8/8d/The_Long_Halloween.jpg',
+            'price': '$4.99',
+            'page_count': 296,
+            'series': 'Batman (2022)',
+            'issue_number': 1,
+            'characters': ['Batman', 'Catwoman', 'Joker'],
+            'creators': ['Chip Zdarsky', 'Jorge Jimenez']
+        },
+        {
+            'id': 3,
+            'title': 'X-Men #1',
+            'description': 'The Krakoan era continues. Mutantkind faces new threats and old enemies.',
+            'image': 'https://upload.wikimedia.org/wikipedia/en/4/4d/XMen_Days_of_Future_Past.jpg',
+            'price': '$3.99',
+            'page_count': 48,
+            'series': 'X-Men (2021)',
+            'issue_number': 1,
+            'characters': ['Storm', 'Cyclops', 'Magneto'],
+            'creators': ['Gerry Duggan', 'Joshua Cassara']
+        },
+        {
+            'id': 4,
+            'title': 'The Sandman: The Dreaming #1',
+            'description': 'Morpheus, the Dream King, embarks on a journey through the realm of dreams.',
+            'image': 'https://upload.wikimedia.org/wikipedia/en/4/4f/The_Sandman_Vol_1.jpg',
+            'price': '$9.99',
+            'page_count': 233,
+            'series': 'The Sandman: The Dreaming',
+            'issue_number': 1,
+            'characters': ['Dream', 'Lucien', 'Matthew'],
+            'creators': ['Neil Gaiman', 'Sam Kieth']
+        },
+        {
+            'id': 5,
+            'title': 'Invincible #1',
+            'description': 'Mark Grayson inherits his father\'s alien powers. What will he become?',
+            'image': 'https://upload.wikimedia.org/wikipedia/en/9/9a/Invincible_Vol_1.jpg',
+            'price': '$2.99',
+            'page_count': 32,
+            'series': 'Invincible (2022)',
+            'issue_number': 1,
+            'characters': ['Invincible', 'Omni-Man', 'Atom Eve'],
+            'creators': ['Robert Kirkman', 'Ryan Ottley']
+        },
+        {
+            'id': 6,
+            'title': 'Saga #60',
+            'description': 'A sci-fi epic about two soldiers from opposite sides finding love in war.',
+            'image': 'https://upload.wikimedia.org/wikipedia/en/4/4b/Saga_Vol_1.jpg',
+            'price': '$2.99',
+            'page_count': 32,
+            'series': 'Saga',
+            'issue_number': 60,
+            'characters': ['Alana', 'Marko', 'Hazel'],
+            'creators': ['Brian K. Vaughan', 'Fiona Staples']
+        },
+        {
+            'id': 7,
+            'title': 'Deadpool #1',
+            'description': 'The Merc with a Mouth gets into more ridiculous adventures and mayhem.',
+            'image': 'https://upload.wikimedia.org/wikipedia/en/5/51/Deadpool_v_vol_1.jpg',
+            'price': '$3.99',
+            'page_count': 24,
+            'series': 'Deadpool (2022)',
+            'issue_number': 1,
+            'characters': ['Deadpool', 'Wolverine', 'Cable'],
+            'creators': ['Collin Mikoll', 'Marty']
+        },
+        {
+            'id': 8,
+            'title': 'Venom #1',
+            'description': 'Eddie Brock returns as Venom, facing new threats and old enemies.',
+            'image': 'https://upload.wikimedia.org/wikipedia/en/3/35/Venom_v2_1.jpg',
+            'price': '$3.99',
+            'page_count': 28,
+            'series': 'Venom (2023)',
+            'issue_number': 1,
+            'characters': ['Venom', 'Knull', 'Carnage'],
+            'creators': ['Al Ewing', 'Ram V']
+        },
+        {
+            'id': 9,
+            'title': 'The Boys #1',
+            'description': 'What if superheroes were corrupt? A gritty take on superhero politics.',
+            'image': 'https://upload.wikimedia.org/wikipedia/en/5/5a/The_Boys_Vol_1.jpg',
+            'price': '$3.99',
+            'page_count': 28,
+            'series': 'The Boys',
+            'issue_number': 1,
+            'characters': ['Homelander', 'Butcher', 'Starlight'],
+            'creators': ['Garth Ennis', 'Darick Robertson']
+        },
+        {
+            'id': 10,
+            'title': 'Wolverine #50',
+            'description': 'Logan\'s past catches up with him. The definitive Wolverine story.',
+            'image': 'https://upload.wikimedia.org/wikipedia/en/8/8c/Wolverine_50.jpg',
+            'price': '$4.99',
+            'page_count': 48,
+            'series': 'Wolverine (2020)',
+            'issue_number': 50,
+            'characters': ['Wolverine', 'Sabretooth', 'Omega Red'],
+            'creators': ['Benjamin Percy', 'Adam Kubert']
+        }
+    ];
+    
+    // Filter based on preferences
+    let filtered = allComics;
+    const prefs = (hero + trope + movie + genres.join(' ')).toLowerCase();
+    
+    if (prefs.includes('spider') || prefs.includes('marvel')) {
+        filtered = allComics.filter(c => c.title.toLowerCase().includes('spider') || c.series.toLowerCase().includes('spider'));
+    } else if (prefs.includes('batman') || prefs.includes('dc')) {
+        filtered = allComics.filter(c => c.title.toLowerCase().includes('batman') || c.series.toLowerCase().includes('batman'));
+    } else if (prefs.includes('x-men') || prefs.includes('xmen')) {
+        filtered = allComics.filter(c => c.title.toLowerCase().includes('x-men') || c.series.toLowerCase().includes('x-men'));
+    } else if (prefs.includes('deadpool')) {
+        filtered = allComics.filter(c => c.title.toLowerCase().includes('deadpool'));
+    } else if (prefs.includes('venom')) {
+        filtered = allComics.filter(c => c.title.toLowerCase().includes('venom'));
+    } else if (prefs.includes('boys')) {
+        filtered = allComics.filter(c => c.title.toLowerCase().includes('boys'));
+    } else if (prefs.includes('invincible')) {
+        filtered = allComics.filter(c => c.title.toLowerCase().includes('invincible'));
+    }
+    
+    // Return filtered or all if no match
+    return filtered.length > 0 ? filtered : allComics.slice(0, 6);
 }
 
 /**
@@ -400,6 +587,77 @@ function displayRecommendations(recommendations) {
                 </div>
             `).join('')}
         </div>
+    `;
+}
+
+/**
+ * Display comics with Marvel API data and AI explanations
+ */
+function displayComicsWithMarvelData(comics, aiAnalysis, ollamaAvailable) {
+    const container = document.getElementById('recommendations-results');
+    if (!container) return;
+    
+    if (comics.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No comics found. Try different filters!</p>';
+        return;
+    }
+
+    // AI status indicator
+    const aiStatus = ollamaAvailable 
+        ? '<span class="ai-badge">🤖 AI Powered</span>'
+        : '<span class="ai-badge" style="background: #666;">📚 Database</span>';
+
+    container.innerHTML = `
+        <div class="recommendations-header" style="margin-bottom: 1.5rem;">
+            <h3 style="font-family: Bangers; font-size: 1.5rem; color: var(--primary);">Recommended For You</h3>
+            ${aiStatus}
+        </div>
+        <div class="results-grid">
+            ${comics.map(comic => `
+                <div class="comic-card marvel-card">
+                    <div class="comic-cover">
+                        ${comic.image 
+                            ? `<img src="${escapeHtml(comic.image)}" alt="${escapeHtml(comic.title)}" onerror="this.style.display='none'">`
+                            : '<div class="no-image">📖</div>'
+                        }
+                    </div>
+                    <div class="comic-info">
+                        <h4>${escapeHtml(comic.title)}</h4>
+                        <p class="comic-series">${escapeHtml(comic.series || 'Unknown Series')}</p>
+                        <div class="comic-meta">
+                            ${comic.price > 0 
+                                ? `<span class="price">$${comic.price.toFixed(2)}</span>` 
+                                : '<span class="price">Price N/A</span>'
+                            }
+                            ${comic.page_count > 0 
+                                ? `<span class="pages">${comic.page_count} pages</span>` 
+                                : ''
+                            }
+                        </div>
+                        ${comic.description 
+                            ? `<p class="comic-description">${escapeHtml(comic.description.substring(0, 150))}...</p>` 
+                            : ''
+                        }
+                        ${comic.characters && comic.characters.length > 0
+                            ? `<div class="comic-characters">
+                                <span class="character-tag">${comic.characters.slice(0, 3).join('</span><span class="character-tag">')}</span>
+                               </div>`
+                            : ''
+                        }
+                        ${comic.ai_reason
+                            ? `<p class="ai-reason">💡 ${escapeHtml(comic.ai_reason)}</p>`
+                            : ''
+                        }
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+        ${aiAnalysis ? `
+            <div class="ai-analysis">
+                <h4>🤖 AI Analysis</h4>
+                <p>${aiAnalysis}</p>
+            </div>
+        ` : ''}
     `;
 }
 
