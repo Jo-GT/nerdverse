@@ -743,12 +743,42 @@
 
         let currentFranchise = 'all';
         let selectedCharacters = [];
+        let comicCoverCache = {};
 
         // Initialise
-        function init() {
+        async function init() {
             populateCharacterChips('all');
+            await loadComicCovers();
             renderComics();
             setupEventListeners();
+        }
+
+        async function loadComicCovers() {
+            await Promise.all(comicsDatabase.map(async comic => {
+                if (comicCoverCache[comic.title]) return;
+
+                comicCoverCache[comic.title] = { image: '', link: '' };
+                try {
+                    const response = await fetch(`/api/comics?q=${encodeURIComponent(comic.title)}`);
+                    if (!response.ok) return;
+                    const results = await response.json();
+                    if (Array.isArray(results) && results.length > 0) {
+                        const issue = results[0];
+                        comicCoverCache[comic.title] = {
+                            image: issue.image || '',
+                            link: issue.site_detail_url || issue.api_detail_url || ''
+                        };
+                    }
+                } catch (error) {
+                    // Keep fallback behaviour if API call fails
+                }
+            }));
+        }
+
+        function openComicLink(url) {
+            if (url) {
+                window.open(url, '_blank', 'noopener');
+            }
         }
 
         function populateCharacterChips(franchise) {
@@ -805,23 +835,28 @@
                 return;
             }
 
-            grid.innerHTML = filtered.map(comic => `
-                <div class="comic-card" data-franchise="${comic.franchise}">
-                    <div class="comic-cover">${comic.title.substring(0, 2).toUpperCase()}</div>
-                    <div class="comic-info">
-                        <div class="comic-title">${comic.title}</div>
-                        <div class="comic-issue">${comic.issue} (${comic.year})</div>
-                        <div class="comic-characters">
-                            ${comic.characters.slice(0, 4).map(c => `<span class="character-tag">${c}</span>`).join('')}
-                        </div>
-                        <div class="comic-description">${comic.description}</div>
-                        <div class="comic-meta">
-                            <span>Writer: <strong>${comic.writer}</strong></span>
-                            <span>Artist: <strong>${comic.artist}</strong></span>
+            grid.innerHTML = filtered.map(comic => {
+                const coverData = comicCoverCache[comic.title] || { image: '', link: '' };
+                const coverImage = coverData.image ? `<img src="${escapeHtml(coverData.image)}" alt="${escapeHtml(comic.title)}" onerror="this.style.display='none'">` : `<div class="comic-icon">${comic.title.substring(0, 2).toUpperCase()}</div>`;
+                const cardLink = coverData.link ? coverData.link : '';
+                return `
+                    <div class="comic-card" data-franchise="${comic.franchise}" ${cardLink ? `onclick="openComicLink('${escapeHtml(cardLink)}')"` : ''}>
+                        <div class="comic-cover">${coverImage}</div>
+                        <div class="comic-info">
+                            <div class="comic-title">${comic.title}</div>
+                            <div class="comic-issue">${comic.issue} (${comic.year})</div>
+                            <div class="comic-characters">
+                                ${comic.characters.slice(0, 4).map(c => `<span class="character-tag">${c}</span>`).join('')}
+                            </div>
+                            <div class="comic-description">${comic.description}</div>
+                            <div class="comic-meta">
+                                <span>Writer: <strong>${comic.writer}</strong></span>
+                                <span>Artist: <strong>${comic.artist}</strong></span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function setupEventListeners() {

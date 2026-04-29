@@ -75,7 +75,7 @@ def search_issues(query, limit=10):
         'query': query,
         'limit': limit,
         'resources': 'issue',
-        'field_list': 'id,name,issue_number,volume,description,image,cover_date,store_date,page_count,person_credits,character_credits,api_detail_url'
+        'field_list': 'id,name,issue_number,volume,description,image,cover_date,store_date,page_count,person_credits,character_credits,api_detail_url,site_detail_url'
     }
     return fetch_from_comic_vine('search/', params)
 
@@ -86,7 +86,7 @@ def search_volumes(query, limit=10):
         'query': query,
         'limit': limit,
         'resources': 'volume',
-        'field_list': 'id,name,description,image,first_issue,last_issue,api_detail_url'
+        'field_list': 'id,name,description,image,first_issue,last_issue,api_detail_url,site_detail_url'
     }
     return fetch_from_comic_vine('search/', params)
 
@@ -94,7 +94,7 @@ def search_volumes(query, limit=10):
 def get_issue_by_id(issue_id):
     """Get detailed information about a specific issue"""
     params = {
-        'field_list': 'id,name,issue_number,volume,description,image,cover_date,store_date,page_count,person_credits,character_credits,api_detail_url'
+        'field_list': 'id,name,issue_number,volume,description,image,cover_date,store_date,page_count,person_credits,character_credits,api_detail_url,site_detail_url'
     }
     return fetch_from_comic_vine(f'issue/{issue_id}/', params)
 
@@ -136,7 +136,8 @@ def format_comic_data(issue):
         'store_date': issue.get('store_date', ''),
         'creators': [c['name'] for c in issue.get('person_credits', [])],
         'characters': [c['name'] for c in issue.get('character_credits', [])],
-        'api_detail_url': issue.get('api_detail_url', '')
+        'api_detail_url': issue.get('api_detail_url', ''),
+        'site_detail_url': issue.get('site_detail_url', '')
     }
 
 
