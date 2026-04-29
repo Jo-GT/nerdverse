@@ -605,6 +605,7 @@
                         <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
                     </svg>
                 </button>
+                <button class="speaker-btn mute-btn" id="dcu-mute-btn" title="Mute voice output">Mute</button>
             </div>
 
             <div class="chat-container">
@@ -780,8 +781,10 @@
         const dcuTtsEnabled = document.getElementById('dcu-tts-enabled');
         const dcuVoiceSelect = document.getElementById('dcu-voice-select');
         const dcuSpeakBtn = document.getElementById('dcu-speak-btn');
+        const dcuMuteBtn = document.getElementById('dcu-mute-btn');
         let dcuVoices = [];
         let lastDcuResponse = '';
+        let dcuTtsMuted = false;
 
         function loadDcuVoices() {
             const voices = speechSynthesis.getVoices();
@@ -802,20 +805,38 @@
         }
 
         function speakDcuResponse() {
-            if (!lastDcuResponse) return;
+            if (!lastDcuResponse || !dcuTtsEnabled.checked || dcuTtsMuted) return;
             speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(lastDcuResponse);
             const selectedVoice = dcuVoices[dcuVoiceSelect.value];
             if (selectedVoice) utterance.voice = selectedVoice;
             utterance.rate = 0.9;
             utterance.pitch = 0.9;
+            utterance.volume = 1.0;
             dcuSpeakBtn.classList.add('speaking');
             utterance.onend = () => dcuSpeakBtn.classList.remove('speaking');
             utterance.onerror = () => dcuSpeakBtn.classList.remove('speaking');
             speechSynthesis.speak(utterance);
         }
 
+        function toggleDcuMute() {
+            dcuTtsMuted = !dcuTtsMuted;
+            dcuMuteBtn.classList.toggle('muted', dcuTtsMuted);
+            dcuMuteBtn.title = dcuTtsMuted ? 'Unmute voice output' : 'Mute voice output';
+            if (dcuTtsMuted) {
+                speechSynthesis.cancel();
+            }
+        }
+
         dcuSpeakBtn.addEventListener('click', speakDcuResponse);
+        dcuMuteBtn.addEventListener('click', toggleDcuMute);
+        dcuTtsEnabled.addEventListener('change', () => {
+            if (!dcuTtsEnabled.checked) {
+                speechSynthesis.cancel();
+            }
+        });
+
+        loadDcuVoices();
 
         const originalSendDcuMessage = sendDcuMessage;
         sendDcuMessage = async function() {

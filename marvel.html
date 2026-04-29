@@ -562,6 +562,7 @@
                         <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
                     </svg>
                 </button>
+                <button class="speaker-btn mute-btn" id="marvel-mute-btn" title="Mute voice output">Mute</button>
             </div>
 
             <div class="chat-container">
@@ -727,8 +728,10 @@
         const marvelTtsEnabled = document.getElementById('marvel-tts-enabled');
         const marvelVoiceSelect = document.getElementById('marvel-voice-select');
         const marvelSpeakBtn = document.getElementById('marvel-speak-btn');
+        const marvelMuteBtn = document.getElementById('marvel-mute-btn');
         let marvelVoices = [];
         let lastMarvelResponse = '';
+        let marvelTtsMuted = false;
 
         // Load available voices
         function loadMarvelVoices() {
@@ -753,7 +756,7 @@
 
         // Speak last response
         function speakMarvelResponse() {
-            if (!lastMarvelResponse) return;
+            if (!lastMarvelResponse || !marvelTtsEnabled.checked || marvelTtsMuted) return;
             
             speechSynthesis.cancel();
             
@@ -764,6 +767,7 @@
             }
             utterance.rate = 0.9;
             utterance.pitch = 0.9;
+            utterance.volume = 1.0;
             
             marvelSpeakBtn.classList.add('speaking');
             utterance.onend = () => marvelSpeakBtn.classList.remove('speaking');
@@ -772,7 +776,24 @@
             speechSynthesis.speak(utterance);
         }
 
+        function toggleMarvelMute() {
+            marvelTtsMuted = !marvelTtsMuted;
+            marvelMuteBtn.classList.toggle('muted', marvelTtsMuted);
+            marvelMuteBtn.title = marvelTtsMuted ? 'Unmute voice output' : 'Mute voice output';
+            if (marvelTtsMuted) {
+                speechSynthesis.cancel();
+            }
+        }
+
         marvelSpeakBtn.addEventListener('click', speakMarvelResponse);
+        marvelMuteBtn.addEventListener('click', toggleMarvelMute);
+        marvelTtsEnabled.addEventListener('change', () => {
+            if (!marvelTtsEnabled.checked) {
+                speechSynthesis.cancel();
+            }
+        });
+
+        loadMarvelVoices();
 
         // Auto-speak when enabled
         const originalSendMarvelMessage = sendMarvelMessage;
