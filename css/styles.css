@@ -513,6 +513,118 @@ main {
     color: var(--secondary);
 }
 
+.tts-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    background: rgba(20, 20, 34, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    margin-bottom: 1rem;
+}
+
+.tts-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    color: var(--text-primary);
+    flex: 1 1 auto;
+    min-width: 200px;
+}
+
+.tts-toggle input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-switch {
+    width: 46px;
+    height: 26px;
+    background: var(--border);
+    border-radius: 999px;
+    position: relative;
+    transition: background 0.3s ease;
+    flex-shrink: 0;
+}
+
+.toggle-switch::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    transition: transform 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.tts-toggle input:checked + .toggle-switch {
+    background: linear-gradient(135deg, var(--secondary), #7bffcf);
+}
+
+.tts-toggle input:checked + .toggle-switch::after {
+    transform: translateX(20px);
+}
+
+.tts-label {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.voice-select {
+    min-width: 210px;
+    max-width: 320px;
+    padding: 0.75rem 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.3s ease, transform 0.2s ease;
+}
+
+.voice-select:focus {
+    border-color: var(--secondary);
+    transform: translateY(-1px);
+}
+
+.speaker-btn,
+.mute-btn {
+    padding: 0.75rem 1.15rem;
+    border: none;
+    border-radius: 999px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+}
+
+.speaker-btn {
+    background: linear-gradient(135deg, var(--primary), #ff8c5a);
+    color: white;
+}
+
+.mute-btn {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.speaker-btn:hover,
+.mute-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
+}
+
 /* Recommendations Page */
 .recommendations-container {
     max-width: 1000px;
