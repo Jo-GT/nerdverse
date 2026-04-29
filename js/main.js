@@ -408,6 +408,32 @@ async function fetchInternetContext(query) {
 }
 
 /**
+ * Fetch Comic Vine search context from the backend
+ */
+async function fetchComicVineContext(query) {
+    try {
+        const response = await fetch(`/api/comics?q=${encodeURIComponent(query)}`);
+        if (!response.ok) return null;
+        const data = await response.json();
+        if (!Array.isArray(data) || data.length === 0) return null;
+        const top = data.slice(0, 5);
+        let summary = `Comic Vine search results for "${query}":\n`;
+        top.forEach(comic => {
+            summary += `- ${comic.title || 'Unknown'} (${comic.series || 'No series'})`;
+            if (comic.issue_number) summary += ` #${comic.issue_number}`;
+            if (comic.description) summary += ` — ${comic.description.replace(/\n/g, ' ').slice(0, 120)}...`;
+            summary += `\n`;
+        });
+        return {
+            source: 'Comic Vine',
+            summary
+        };
+    } catch (error) {
+        return null;
+    }
+}
+
+/**
  * Get AI response from Ollama
  */
 async function getAIResponse(page, message) {
@@ -421,10 +447,17 @@ async function getAIResponse(page, message) {
         }
     }
 
-    if (page === 'wiki' || page === 'guides') {
+    if (page === 'wiki' || page === 'guides' || page === 'personalized') {
         const internetContext = await fetchInternetContext(message);
         if (internetContext && internetContext.summary) {
             prompt += `\n\nAlso use this live internet search context from ${internetContext.source} if it helps answer the question:\n\n${internetContext.summary}`;
+        }
+    }
+
+    if (page === 'wiki' || page === 'guides' || page === 'personalized') {
+        const comicVineContext = await fetchComicVineContext(message);
+        if (comicVineContext && comicVineContext.summary) {
+            prompt += `\n\nAlso use the following Comic Vine data to answer questions about comics, characters, series, or issues. Cite this information when relevant:\n\n${comicVineContext.summary}`;
         }
     }
 
