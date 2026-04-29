@@ -115,6 +115,85 @@ function getCurrentPage() {
     return filename.replace('.html', '');
 }
 
+const ttsStates = {};
+
+function initializeTts(page) {
+    const ttsEnabled = document.getElementById(`${page}-tts-enabled`);
+    const voiceSelect = document.getElementById(`${page}-voice-select`);
+    const speakBtn = document.getElementById(`${page}-speak-btn`);
+    const muteBtn = document.getElementById(`${page}-mute-btn`);
+
+    if (!ttsEnabled || !voiceSelect || !speakBtn || !muteBtn) return;
+
+    const state = {
+        ttsEnabled,
+        voiceSelect,
+        speakBtn,
+        muteBtn,
+        muted: false,
+        lastResponse: '',
+        speakResponse: null,
+    };
+
+    const updateMuteButton = () => {
+        muteBtn.textContent = state.muted ? 'Unmute' : 'Mute';
+    };
+
+    const loadVoices = () => {
+        const voices = speechSynthesis.getVoices();
+        if (!voices || voices.length === 0) return;
+        const options = voices.map(voice => `
+            <option value="${escapeHtml(voice.name)}">${escapeHtml(voice.name)} (${escapeHtml(voice.lang)})</option>
+        `).join('');
+        voiceSelect.innerHTML = options;
+        const defaultVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+        if (defaultVoice) {
+            voiceSelect.value = defaultVoice.name;
+        }
+    };
+
+    loadVoices();
+    if ('onvoiceschanged' in speechSynthesis) {
+        speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    state.speakResponse = () => {
+        if (!state.ttsEnabled.checked || state.muted || !state.lastResponse.trim()) return;
+        speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(state.lastResponse);
+        utterance.rate = 1;
+        utterance.pitch = 1;
+        const selectedVoice = speechSynthesis.getVoices().find(v => v.name === state.voiceSelect.value);
+        if (selectedVoice) {
+            utterance.voice = selectedVoice;
+        }
+        speechSynthesis.speak(utterance);
+    };
+
+    speakBtn.addEventListener('click', () => {
+        if (state.lastResponse.trim()) {
+            state.speakResponse();
+        }
+    });
+
+    muteBtn.addEventListener('click', () => {
+        state.muted = !state.muted;
+        if (state.muted) {
+            speechSynthesis.cancel();
+        }
+        updateMuteButton();
+    });
+
+    ttsEnabled.addEventListener('change', () => {
+        if (!ttsEnabled.checked) {
+            speechSynthesis.cancel();
+        }
+    });
+
+    updateMuteButton();
+    ttsStates[page] = state;
+}
+
 /**
  * Set the active navigation link
  */
@@ -187,6 +266,9 @@ function initializeChatListeners() {
     if (personalizedSend) {
         personalizedSend.addEventListener('click', () => sendMessage('personalized'));
     }
+
+    initializeTts('wiki');
+    initializeTts('guides');
 }
 
 /**
@@ -237,6 +319,12 @@ async function sendMessage(page) {
         const response = await getAIResponse(page, message);
         hideTypingIndicator(page);
         addMessage(page, response, 'ai');
+
+        const ttsState = ttsStates[page];
+        if (ttsState && ttsState.ttsEnabled.checked) {
+            ttsState.lastResponse = response;
+            setTimeout(() => ttsState.speakResponse && ttsState.speakResponse(), 500);
+        }
     } catch (error) {
         hideTypingIndicator(page);
         addMessage(page, `⚠️ ${error.message}`, 'ai');
@@ -256,7 +344,11 @@ function addMessage(page, content, sender) {
     
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${sender}`;
-    messageDiv.innerHTML = `<p>${escapeHtml(content)}</p>`;
+    if (sender === 'ai') {
+        messageDiv.innerHTML = `<div class="message-label">J.A.R.V.I.S.</div><p>${escapeHtml(content)}</p>`;
+    } else {
+        messageDiv.innerHTML = `<div class="message-label">You</div><p>${escapeHtml(content)}</p>`;
+    }
     container.appendChild(messageDiv);
     container.scrollTop = container.scrollHeight;
 }
