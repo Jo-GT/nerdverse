@@ -32,8 +32,22 @@
     <main>
         <div class="chat-container">
             <div class="chat-header">
-                <h2>📖 Guide Assistant</h2>
+                <h2>📖 J.A.R.V.I.S. Guide Assistant</h2>
                 <p>Get help starting your comic journey!</p>
+            </div>
+
+            <!-- TTS Controls -->
+            <div class="tts-controls">
+                <label class="tts-toggle">
+                    <input type="checkbox" id="guides-tts-enabled">
+                    <span class="toggle-switch"></span>
+                    <span class="tts-label">Voice Output</span>
+                </label>
+                <select class="voice-select" id="guides-voice-select">
+                    <option value="">Loading voices...</option>
+                </select>
+                <button class="speaker-btn" id="guides-speak-btn" title="Speak last response">Speak</button>
+                <button class="speaker-btn mute-btn" id="guides-mute-btn" title="Mute voice output">Mute</button>
             </div>
             
             <!-- Quick Prompts -->
@@ -47,7 +61,8 @@
             <!-- Chat Messages -->
             <div class="chat-messages" id="guides-messages">
                 <div class="message ai">
-                    <p>👋 Hi! I'm your Comic Guide Assistant. Need help getting started or want to know the best comics to read? Just ask!</p>
+                    <div class="message-label">J.A.R.V.I.S.</div>
+                    <p>👋 Greetings, Sir. I am J.A.R.V.I.S., your Comic Guide Assistant. Need help getting started or want to know the best comics to read? Just ask!</p>
                 </div>
             </div>
             

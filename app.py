@@ -14,7 +14,11 @@ from comic_vine_api import (
     get_mock_recommendations, 
     get_recommendations_with_comic_vine,
     search_issues,
-    format_comic_data
+    format_comic_data,
+    is_api_available
+)
+from wiki_api import (
+    get_wiki_context
 )
 from ollama_integration import (
     check_ollama_status,
@@ -41,6 +45,10 @@ class ComicHelperHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_comics_api()
         elif path == '/api/ollama-status':
             self.handle_ollama_status()
+        elif path == '/api/comic-vine-status':
+            self.handle_comic_vine_status()
+        elif path == '/api/wiki':
+            self.handle_wiki_api()
         elif path == '/api/chat':
             self.handle_chat_api()
         elif path == '/api/recommend':
@@ -104,7 +112,27 @@ class ComicHelperHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json_response({'response': response})
         else:
             self.send_json_response({'error': 'No message provided'})
-    
+
+    def handle_wiki_api(self):
+        """Return wiki summary data for a search query"""
+        query = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        search_term = query.get('q', [''])[0]
+        if search_term:
+            wiki_data = get_wiki_context(search_term)
+        else:
+            wiki_data = {
+                'query': '',
+                'title': '',
+                'summary': '',
+                'source': 'Wikipedia',
+                'url': ''
+            }
+        self.send_json_response(wiki_data)
+
+    def handle_comic_vine_status(self):
+        """Return whether Comic Vine is reachable"""
+        self.send_json_response({'available': is_api_available()})
+
     def handle_recommend_api(self):
         """Get AI-powered recommendations"""
         query = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
@@ -181,7 +209,12 @@ def main():
         else:
             print(f"   ⚠️  Ollama: Not running (run 'ollama serve' to enable AI)")
         
-        print(f"   📚 Comic Vine: API key configured\n")
+        comicvine_available = is_api_available()
+        if comicvine_available:
+            print("   📚 Comic Vine: Connected")
+        else:
+            print("   📚 Comic Vine: Not reachable or no results returned")
+        print()
         
         # Open browser automatically
         webbrowser.open(f"http://localhost:{PORT}")

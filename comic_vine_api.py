@@ -12,7 +12,7 @@ import urllib.error
 
 # Comic Vine API Configuration
 COMIC_VINE_API_KEY = os.environ.get('COMIC_VINE_API_KEY', '97d02081df7467dfa454642d9ceade798611cbdf')
-COMIC_VINE_BASE_URL = 'https://comicvine.gamespot.io/api'
+COMIC_VINE_BASE_URL = 'https://comicvine.gamespot.com/api'
 
 # Track API availability
 _api_available = None
@@ -63,6 +63,9 @@ def fetch_from_comic_vine(endpoint, params=None):
 def is_api_available():
     """Check if Comic Vine API is reachable"""
     global _api_available
+    if _api_available is None:
+        result = search_issues('Spider-Man', limit=1)
+        return bool(result.get('results'))
     return _api_available is True
 
 
@@ -300,178 +303,5 @@ if __name__ == '__main__':
     else:
         print("Using mock data (API unreachable)")
         for comic in get_mock_recommendations(''):
-            print(f"- {comic['title']} ({comic['series']})")#!/usr/bin/env python3
-"""
-Comic Vine API Integration Module
-Fetches comic data from Comic Vine API
-"""
+            print(f"- {comic['title']} ({comic['series']})")
 
-import os
-import json
-import urllib.request
-import urllib.parse
-import urllib.error
-
-# Comic Vine API Configuration
-COMIC_VINE_API_KEY = os.environ.get('COMIC_VINE_API_KEY', '97d02081df7467dfa454642d9ceade798611cbdf')
-COMIC_VINE_BASE_URL = 'https://comicvineapi.com/api'
-
-
-def fetch_from_comic_vine(endpoint, params=None):
-    """Generic function to fetch data from Comic Vine API"""
-    if params is None:
-        params = {}
-    
-    # Add API key
-    params['api_key'] = COMIC_VINE_API_KEY
-    params['format'] = 'json'
-    
-    # Build URL
-    query_string = urllib.parse.urlencode(params)
-    url = f"{COMIC_VINE_BASE_URL}/{endpoint}?{query_string}"
-    
-    try:
-        req = urllib.request.Request(url)
-        req.add_header('User-Agent', 'ComicHelper/1.0')
-        
-        with urllib.request.urlopen(req, timeout=15) as response:
-            data = json.loads(response.read().decode('utf-8'))
-            
-            if data.get('status_code') == 1:
-                return data
-            else:
-                print(f"Comic Vine Error: {data.get('error')}")
-                return {'results': [], 'number_of_total_results': 0}
-    except urllib.error.HTTPError as e:
-        print(f"Comic Vine API Error: {e.code} - {e.reason}")
-        return {'results': [], 'number_of_total_results': 0}
-    except Exception as e:
-        print(f"Error fetching from Comic Vine: {e}")
-        return {'results': [], 'number_of_total_results': 0}
-
-
-def search_issues(query, limit=10):
-    """Search for comic issues by title"""
-    params = {
-        'query': query,
-        'limit': limit,
-        'resources': 'issue'
-    }
-    return fetch_from_comic_vine('search/', params)
-
-
-def search_volumes(query, limit=10):
-    """Search for comic volumes/series"""
-    params = {
-        'query': query,
-        'limit': limit,
-        'resources': 'volume'
-    }
-    return fetch_from_comic_vine('search/', params)
-
-
-def get_issue_by_id(issue_id):
-    """Get detailed information about a specific issue"""
-    return fetch_from_comic_vine(f'issue/{issue_id}/')
-
-
-def get_volume_by_id(volume_id):
-    """Get detailed information about a specific volume"""
-    return fetch_from_comic_vine(f'volume/{volume_id}/')
-
-
-def get_issue_image(issue_data):
-    """Extract the best available image from issue data"""
-    image = issue_data.get('image', {})
-    original = image.get('original_url') or image.get('screen_url')
-    if original and original != 'http://i.annoying':
-        return original
-    return None
-
-
-def get_issue_price(issue_data):
-    """Extract price information from issue data"""
-    # Comic Vine doesn't have direct price, but we can get cover date
-    cover_date = issue_data.get('cover_date', '')
-    return cover_date
-
-
-def format_comic_data(issue):
-    """Format comic issue data for display"""
-    image = get_issue_image(issue)
-    
-    return {
-        'id': issue.get('id'),
-        'title': issue.get('name', issue.get('volume', {}).get('name', 'Unknown')),
-        'description': issue.get('description', 'No description available.'),
-        'image': image,
-        'price': issue.get('cover_date', 'N/A'),
-        'page_count': issue.get('page_count', 0),
-        'issue_number': issue.get('issue_number', 0),
-        'series': issue.get('volume', {}).get('name', ''),
-        'release_date': issue.get('cover_date', ''),
-        'store_date': issue.get('store_date', ''),
-        'creators': [c['name'] for c in issue.get('person_credits', [])],
-        'characters': [c['name'] for c in issue.get('character_credits', [])],
-        'api_detail_url': issue.get('api_detail_url', '')
-    }
-
-
-def get_recommendations_with_comic_vine(user_preferences):
-    """
-    Get comic recommendations using Comic Vine API based on user preferences
-    """
-    recommendations = []
-    
-    # Map preferences to Comic Vine searches
-    search_terms = []
-    
-    prefs_lower = user_preferences.lower()
-    
-    if 'spider' in prefs_lower:
-        search_terms.append('Spider-Man')
-    if 'batman' in prefs_lower:
-        search_terms.append('Batman')
-    if 'x-men' in prefs_lower or 'xmen' in prefs_lower:
-        search_terms.append('X-Men')
-    if 'iron man' in prefs_lower or 'ironman' in prefs_lower:
-        search_terms.append('Iron Man')
-    if 'deadpool' in prefs_lower:
-        search_terms.append('Deadpool')
-    if 'avenger' in prefs_lower:
-        search_terms.append('Avengers')
-    if 'venom' in prefs_lower:
-        search_terms.append('Venom')
-    if 'hulk' in prefs_lower:
-        search_terms.append('Incredible Hulk')
-    if 'thor' in prefs_lower:
-        search_terms.append('Thor')
-    if 'wolverine' in prefs_lower:
-        search_terms.append('Wolverine')
-    if 'superman' in prefs_lower:
-        search_terms.append('Superman')
-    if 'wonder woman' in prefs_lower:
-        search_terms.append('Wonder Woman')
-    if 'justice league' in prefs_lower:
-        search_terms.append('Justice League')
-    if 'the boys' in prefs_lower:
-        search_terms.append('The Boys')
-    if 'invincible' in prefs_lower:
-        search_terms.append('Invincible')
-    if 'walking dead' in prefs_lower:
-        search_terms.append('Walking Dead')
-    
-    # Default search if no specific terms
-    if not search_terms:
-        search_terms = ['Spider-Man', 'Batman', 'X-Men']
-    
-    for term in search_terms[:3]:  # Limit to 3 searches
-        result = search_issues(term, limit=8)
-        issues = result.get('results', [])
-        
-        for issue in issues:
-            formatted = format_comic_data(issue)
-            if formatted['image']:  # Only include issues with images
-                recommendations.append(formatted)
-    
-    return recommendations[:15]  # Return max 15 recommendations

@@ -32,8 +32,22 @@
     <main>
         <div class="chat-container">
             <div class="chat-header">
-                <h2>📚 Wiki Assistant</h2>
+                <h2>📚 J.A.R.V.I.S. Wiki Assistant</h2>
                 <p>Ask me anything about comics!</p>
+            </div>
+
+            <!-- TTS Controls -->
+            <div class="tts-controls">
+                <label class="tts-toggle">
+                    <input type="checkbox" id="wiki-tts-enabled">
+                    <span class="toggle-switch"></span>
+                    <span class="tts-label">Voice Output</span>
+                </label>
+                <select class="voice-select" id="wiki-voice-select">
+                    <option value="">Loading voices...</option>
+                </select>
+                <button class="speaker-btn" id="wiki-speak-btn" title="Speak last response">Speak</button>
+                <button class="speaker-btn mute-btn" id="wiki-mute-btn" title="Mute voice output">Mute</button>
             </div>
             
             <!-- Quick Prompts -->
@@ -47,7 +61,8 @@
             <!-- Chat Messages -->
             <div class="chat-messages" id="wiki-messages">
                 <div class="message ai">
-                    <p>👋 Hi! I'm your Comic Wiki Assistant. Ask me anything about comic characters, storylines, events, or universes!</p>
+                    <div class="message-label">J.A.R.V.I.S.</div>
+                    <p>👋 Greetings, Sir. I am J.A.R.V.I.S., your Comic Wiki Assistant. Ask me anything about comic characters, storylines, events, or universes!</p>
                 </div>
             </div>
             

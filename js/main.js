@@ -287,11 +287,33 @@ function hideTypingIndicator(page) {
 }
 
 /**
+ * Fetch external wiki context from the backend
+ */
+async function fetchWikiContext(query) {
+    try {
+        const response = await fetch(`/api/wiki?q=${encodeURIComponent(query)}`);
+        if (!response.ok) return null;
+        return await response.json();
+    } catch (error) {
+        return null;
+    }
+}
+
+/**
  * Get AI response from Ollama
  */
 async function getAIResponse(page, message) {
     const systemPrompt = SYSTEM_PROMPTS[page];
-    const prompt = `${systemPrompt}\n\nUser question: ${message}`;
+    let prompt = systemPrompt;
+
+    if (page === 'wiki') {
+        const wikiContext = await fetchWikiContext(message);
+        if (wikiContext && wikiContext.summary) {
+            prompt += `\n\nUse the following verified information from ${wikiContext.source} to answer the user's question. Do not invent new facts.\n\n${wikiContext.summary}`;
+        }
+    }
+
+    prompt += `\n\nUser question: ${message}`;
 
     const response = await fetch(OLLAMA_URL, {
         method: 'POST',
