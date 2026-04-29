@@ -32,6 +32,14 @@
     <main>
         <!-- Hero Section -->
         <section class="hero">
+            <!-- Floating Animated Images -->
+            <div class="floating-images">
+                <img src="images/batman.png" alt="Batman" class="floating-img floating-img-1">
+                <img src="images/spiderman.png" alt="Spider-Man" class="floating-img floating-img-2">
+                <img src="images/superman.png" alt="Superman" class="floating-img floating-img-3">
+                <img src="images/cyclops.png" alt="Cyclops" class="floating-img floating-img-4">
+                <img src="images/wonder.png" alt="Wonder Woman" class="floating-img floating-img-5">
+            </div>
             <h1>NerdVerse</h1>
             <p class="tagline">Your AI-powered companion powered by <span>J.A.R.V.I.S.</span> for <span>comic recommendations</span>, <span>wikis</span>, and <span>cinematic universes</span></p>
             <div class="hero-buttons">
@@ -41,15 +49,15 @@
             </div>
             <div class="hero-stats">
                 <div class="stat">
-                    <span class="stat-number">🤖</span>
-                    <span class="stat-label">AI Powered</span>
+                    <span class="stat-number"><img src="icons/jarvis.png" width="100" height="100"></span>
+                    <span class="stat-label">J.A.R.V.I.S Powered</span>
                 </div>
                 <div class="stat">
-                    <span class="stat-number">📚</span>
+                    <span class="stat-number"><img src="icons/superspider.jpeg" width="80" height="100"></span>
                     <span class="stat-label">Comic Database</span>
                 </div>
                 <div class="stat">
-                    <span class="stat-number">🎯</span>
+                    <span class="stat-number"><img src="icons/suit.png" width="90" height="90"></span>
                     <span class="stat-label">Personalized</span>
                 </div>
             </div>
@@ -58,19 +66,19 @@
         <!-- Assistant Cards -->
         <div class="assistant-grid">
             <div class="assistant-card" onclick="navigateTo('marvel')">
-                <div class="assistant-icon">⚡</div>
+                <div class="assistant-icon"><img src="icons/bigger icons/marvel.png"></div>
                 <h3>Marvel Cinematic Universe</h3>
                 <p>Explore the complete MCU timeline from Iron Man to Avengers: Secret Wars. Interactive chronological guide with AI assistance.</p>
                 <button class="btn btn-primary">Explore MCU</button>
             </div>
             <div class="assistant-card" onclick="navigateTo('dcu')">
-                <div class="assistant-icon">🦇</div>
+                <div class="assistant-icon"><img src="icons/bigger icons/dc.png"></div>
                 <h3>DC Cinematic Universe</h3>
                 <p>Navigate the DC Extended Universe and new DCU reboot. From Man of Steel to the new Gods & Monsters era.</p>
                 <button class="btn btn-secondary">Explore DCU</button>
             </div>
             <div class="assistant-card" onclick="navigateTo('comics')">
-                <div class="assistant-icon">📚</div>
+                <div class="assistant-icon"><img src="icons/bigger icons/comics.png"></div>
                 <h3>Popular Comics</h3>
                 <p>Browse trending comics from Marvel, DC, The Boys, Invincible, Image, and indie publishers. Filter by characters.</p>
                 <button class="btn btn-outline">Browse Comics</button>
