@@ -742,7 +742,7 @@ function getComicIcon(title) {
 function displayRecommendations(recommendations) {
     const container = document.getElementById('recommendations-results');
     if (!container) return;
-    
+
     if (recommendations.length === 0) {
         container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No recommendations found. Try different filters!</p>';
         return;
@@ -753,7 +753,12 @@ function displayRecommendations(recommendations) {
         <div class="results-grid">
             ${recommendations.map(rec => `
                 <div class="comic-card">
-                    <div class="comic-cover">${rec.icon}</div>
+                    <div class="comic-cover">
+                        ${rec.image
+                            ? `<img src="${escapeHtml(rec.image)}" alt="${escapeHtml(rec.title)}" onerror="this.style.display='none'">`
+                            : `<div class="comic-icon">${rec.icon || '📚'}</div>`
+                        }
+                    </div>
                     <div class="comic-info">
                         <h4>${escapeHtml(rec.title)}</h4>
                         <p>${escapeHtml(rec.publisher)}</p>
