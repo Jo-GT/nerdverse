@@ -80,18 +80,18 @@ Present information in a clear, organized timeline format. Reference specific fi
 };
 
 /**
- * Initialize the application
+ * Initialise the application
  */
 document.addEventListener('DOMContentLoaded', function() {
-    initializeNavigation();
-    initializeChatListeners();
-    initializeGenreTags();
+    initialiseNavigation();
+    initialiseChatListeners();
+    initialiseGenreTags();
 });
 
 /**
- * Initialize navigation functionality
+ * Initialise navigation functionality
  */
-function initializeNavigation() {
+function initialiseNavigation() {
     const mobileMenu = document.querySelector('.mobile-menu');
     if (mobileMenu) {
         mobileMenu.addEventListener('click', toggleMobileMenu);
@@ -117,7 +117,7 @@ function getCurrentPage() {
 
 const ttsStates = {};
 
-function initializeTts(page) {
+function initialiseTts(page) {
     const ttsEnabled = document.getElementById(`${page}-tts-enabled`);
     const voiceSelect = document.getElementById(`${page}-voice-select`);
     const speakBtn = document.getElementById(`${page}-speak-btn`);
@@ -225,9 +225,9 @@ function navigateTo(page) {
 }
 
 /**
- * Initialize chat input listeners
+ * Initialise chat input listeners
  */
-function initializeChatListeners() {
+function initialiseChatListeners() {
     // Wiki chat
     const wikiInput = document.getElementById('wiki-input');
     const wikiSend = document.getElementById('wiki-send');
@@ -267,14 +267,14 @@ function initializeChatListeners() {
         personalizedSend.addEventListener('click', () => sendMessage('personalized'));
     }
 
-    initializeTts('wiki');
-    initializeTts('guides');
+    initialiseTts('wiki');
+    initialiseTts('guides');
 }
 
 /**
- * Initialize genre tag selection
+ * Initialise genre tag selection
  */
-function initializeGenreTags() {
+function initialiseGenreTags() {
     const genreTags = document.querySelectorAll('.genre-tag');
     genreTags.forEach(tag => {
         tag.addEventListener('click', () => {

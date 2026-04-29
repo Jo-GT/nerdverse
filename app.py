@@ -24,7 +24,7 @@ from wiki_api import (
 from ollama_integration import (
     check_ollama_status,
     chat_with_ai_about_comics,
-    analyze_preferences_with_ai,
+    analyse_preferences_with_ai,
     get_ai_explanation
 )
 
@@ -163,7 +163,7 @@ class ComicHelperHandler(http.server.SimpleHTTPRequestHandler):
         # Get AI analysis if Ollama is available
         status = check_ollama_status()
         if status['available'] and comics:
-            ai_analysis = analyze_preferences_with_ai(preferences, comics)
+            ai_analysis = analyse_preferences_with_ai(preferences, comics)
             self.send_json_response({
                 'comics': comics,
                 'ai_analysis': ai_analysis,
@@ -190,7 +190,7 @@ class ComicHelperHandler(http.server.SimpleHTTPRequestHandler):
         # Get AI analysis
         status = check_ollama_status()
         if status['available'] and comics:
-            ai_analysis = analyze_preferences_with_ai(preferences, comics)
+            ai_analysis = analyse_preferences_with_ai(preferences, comics)
             self.send_json_response({
                 'comics': comics,
                 'ai_analysis': ai_analysis,

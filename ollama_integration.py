@@ -65,9 +65,9 @@ def check_ollama_status():
     
     return {'available': False, 'models': []}
 
-def analyze_preferences_with_ai(user_input, available_comics):
+def analyse_preferences_with_ai(user_input, available_comics):
     """
-    Use Ollama to analyze user preferences and explain recommendations
+    Use Ollama to analyse user preferences and explain recommendations
     """
     # Build context about available comics
     comic_context = "Available comics:\n"
@@ -78,7 +78,7 @@ def analyze_preferences_with_ai(user_input, available_comics):
         comic_context += f"Characters: {', '.join(comic.get('characters', [])[:3])}\n"
     
     system_prompt = """You are a helpful comic book recommendation assistant. 
-Analyze the user's preferences and explain which comics would be perfect for them.
+Analyse the user's preferences and explain which comics would be perfect for them.
 Be specific about WHY each recommendation matches their interests.
 Keep responses concise but informative."""
     
