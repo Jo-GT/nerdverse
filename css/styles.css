@@ -514,26 +514,24 @@ main {
 }
 
 .tts-controls {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) minmax(240px, 1.4fr) auto auto;
     gap: 0.75rem;
     align-items: center;
-    justify-content: space-between;
     padding: 1rem 1.25rem;
-    background: rgba(20, 20, 34, 0.92);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 24px;
+    background: rgba(20, 20, 34, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 28px;
     margin-bottom: 1rem;
 }
 
 .tts-toggle {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.85rem;
     cursor: pointer;
     color: var(--text-primary);
-    flex: 1 1 auto;
-    min-width: 200px;
+    min-width: 220px;
 }
 
 .tts-toggle input {
@@ -544,8 +542,8 @@ main {
 }
 
 .toggle-switch {
-    width: 46px;
-    height: 26px;
+    width: 48px;
+    height: 28px;
     background: var(--border);
     border-radius: 999px;
     position: relative;
@@ -558,12 +556,12 @@ main {
     position: absolute;
     top: 3px;
     left: 3px;
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     background: white;
     transition: transform 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22);
 }
 
 .tts-toggle input:checked + .toggle-switch {
@@ -577,13 +575,13 @@ main {
 .tts-label {
     color: var(--text-secondary);
     font-size: 0.95rem;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .voice-select {
-    min-width: 210px;
-    max-width: 320px;
-    padding: 0.75rem 1rem;
+    min-width: 240px;
+    max-width: 100%;
+    padding: 0.85rem 1rem;
     border-radius: 999px;
     border: 1px solid var(--border);
     background: var(--bg);
@@ -600,7 +598,8 @@ main {
 
 .speaker-btn,
 .mute-btn {
-    padding: 0.75rem 1.15rem;
+    min-width: 110px;
+    padding: 0.85rem 1.2rem;
     border: none;
     border-radius: 999px;
     font-weight: 700;
@@ -614,15 +613,28 @@ main {
 }
 
 .mute-btn {
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.08);
     color: var(--text-secondary);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .speaker-btn:hover,
 .mute-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
+    box-shadow: 0 12px 22px rgba(0, 0, 0, 0.22);
+}
+
+@media (max-width: 860px) {
+    .tts-controls {
+        grid-template-columns: 1fr;
+    }
+
+    .tts-toggle,
+    .voice-select,
+    .speaker-btn,
+    .mute-btn {
+        width: 100%;
+    }
 }
 
 /* Recommendations Page */
