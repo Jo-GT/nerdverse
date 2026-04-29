@@ -74,7 +74,8 @@ def search_issues(query, limit=10):
     params = {
         'query': query,
         'limit': limit,
-        'resources': 'issue'
+        'resources': 'issue',
+        'field_list': 'id,name,issue_number,volume,description,image,cover_date,store_date,page_count,person_credits,character_credits,api_detail_url'
     }
     return fetch_from_comic_vine('search/', params)
 
@@ -84,14 +85,18 @@ def search_volumes(query, limit=10):
     params = {
         'query': query,
         'limit': limit,
-        'resources': 'volume'
+        'resources': 'volume',
+        'field_list': 'id,name,description,image,first_issue,last_issue,api_detail_url'
     }
     return fetch_from_comic_vine('search/', params)
 
 
 def get_issue_by_id(issue_id):
     """Get detailed information about a specific issue"""
-    return fetch_from_comic_vine(f'issue/{issue_id}/')
+    params = {
+        'field_list': 'id,name,issue_number,volume,description,image,cover_date,store_date,page_count,person_credits,character_credits,api_detail_url'
+    }
+    return fetch_from_comic_vine(f'issue/{issue_id}/', params)
 
 
 def get_volume_by_id(volume_id):
@@ -102,9 +107,10 @@ def get_volume_by_id(volume_id):
 def get_issue_image(issue_data):
     """Extract the best available image from issue data"""
     image = issue_data.get('image', {})
-    original = image.get('original_url') or image.get('screen_url')
-    if original and original != 'http://i.annoying':
-        return original
+    for key in ('original_url', 'medium_url', 'screen_url', 'thumb_url', 'icon_url'):
+        url = image.get(key)
+        if url and url != 'http://i.annoying':
+            return url
     return None
 
 
@@ -280,11 +286,16 @@ def get_recommendations_with_comic_vine(user_preferences):
     
     recommendations = []
     for issue in issues:
+        # If the search result doesn't include a cover, request issue details
         formatted = format_comic_data(issue)
-        if formatted['image']:  # Only include issues with images
+        if not formatted['image'] and issue.get('id'):
+            detailed_issue = get_issue_by_id(issue['id'])
+            if detailed_issue.get('results'):
+                formatted = format_comic_data(detailed_issue['results'])
+        if formatted['image']:
             recommendations.append(formatted)
     
-    return recommendations[:15]
+    return recommendations[:15] if recommendations else get_mock_recommendations(user_preferences)
 
 
 if __name__ == '__main__':

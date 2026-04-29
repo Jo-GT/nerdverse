@@ -86,6 +86,9 @@ document.addEventListener('DOMContentLoaded', function() {
     initialiseNavigation();
     initialiseChatListeners();
     initialiseGenreTags();
+    if (document.getElementById('recommendations-results')) {
+        getRecommendations();
+    }
 });
 
 /**
