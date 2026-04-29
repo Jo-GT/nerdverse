@@ -392,6 +392,19 @@ async function fetchWikiContext(query) {
 }
 
 /**
+ * Fetch live internet search context from the backend
+ */
+async function fetchInternetContext(query) {
+    try {
+        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        if (!response.ok) return null;
+        return await response.json();
+    } catch (error) {
+        return null;
+    }
+}
+
+/**
  * Get AI response from Ollama
  */
 async function getAIResponse(page, message) {
@@ -402,6 +415,13 @@ async function getAIResponse(page, message) {
         const wikiContext = await fetchWikiContext(message);
         if (wikiContext && wikiContext.summary) {
             prompt += `\n\nUse the following verified information from ${wikiContext.source} to answer the user's question. Do not invent new facts.\n\n${wikiContext.summary}`;
+        }
+    }
+
+    if (page === 'wiki' || page === 'guides') {
+        const internetContext = await fetchInternetContext(message);
+        if (internetContext && internetContext.summary) {
+            prompt += `\n\nAlso use this live internet search context from ${internetContext.source} if it helps answer the question:\n\n${internetContext.summary}`;
         }
     }
 

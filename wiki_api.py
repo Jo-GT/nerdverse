@@ -13,6 +13,7 @@ WIKIPEDIA_SEARCH_URL = 'https://en.wikipedia.org/w/api.php'
 WIKIPEDIA_SUMMARY_URL = 'https://en.wikipedia.org/api/rest_v1/page/summary'
 MARVEL_FANDOM_API = 'https://marvel.fandom.com/api.php'
 DC_FANDOM_API = 'https://dc.fandom.com/api.php'
+DUCKDUCKGO_LOOKUP_URL = 'https://api.duckduckgo.com/'
 
 
 def _http_get_json(url, params=None, timeout=15):
@@ -87,6 +88,62 @@ def get_fandom_summary(title, wiki='marvel'):
     return None
 
 
+def search_duckduckgo(query):
+    return _http_get_json(DUCKDUCKGO_LOOKUP_URL, {
+        'q': query,
+        'format': 'json',
+        'no_html': 1,
+        'skip_disambig': 1
+    })
+
+
+def get_internet_context(query):
+    query = query.strip()
+    if not query:
+        return {
+            'query': query,
+            'title': '',
+            'summary': '',
+            'source': 'Internet Search',
+            'url': ''
+        }
+
+    result = search_duckduckgo(query)
+    if not result:
+        return {
+            'query': query,
+            'title': '',
+            'summary': '',
+            'source': 'Internet Search',
+            'url': ''
+        }
+
+    summary = result.get('AbstractText', '').strip()
+    source_url = result.get('AbstractURL', '')
+
+    if not summary:
+        related = result.get('RelatedTopics', [])
+        for item in related[:4]:
+            if isinstance(item, dict) and item.get('Text'):
+                summary = item.get('Text').strip()
+                source_url = item.get('FirstURL', source_url)
+                break
+            if isinstance(item, dict) and item.get('Topics'):
+                first_topic = item.get('Topics')[0]
+                if first_topic and first_topic.get('Text'):
+                    summary = first_topic.get('Text').strip()
+                    source_url = first_topic.get('FirstURL', source_url)
+                    break
+
+    return {
+        'query': query,
+        'title': result.get('Heading', query),
+        'summary': summary,
+        'source': 'DuckDuckGo Search',
+        'url': source_url
+    }
+
+
 def get_wiki_context(query):
     query = query.strip()
     if not query:
@@ -149,10 +206,11 @@ def get_wiki_context(query):
                         'url': summary_data.get('content_urls', {}).get('desktop', {}).get('page', '')
                     }
 
+    internet_context = get_internet_context(query)
     return {
         'query': query,
-        'title': '',
-        'summary': '',
-        'source': 'Wikipedia',
-        'url': ''
+        'title': internet_context.get('title', ''),
+        'summary': internet_context.get('summary', ''),
+        'source': internet_context.get('source', 'Internet Search'),
+        'url': internet_context.get('url', '')
     }

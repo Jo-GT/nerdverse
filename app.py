@@ -18,7 +18,8 @@ from comic_vine_api import (
     is_api_available
 )
 from wiki_api import (
-    get_wiki_context
+    get_wiki_context,
+    get_internet_context
 )
 from ollama_integration import (
     check_ollama_status,
@@ -49,6 +50,8 @@ class ComicHelperHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_comic_vine_status()
         elif path == '/api/wiki':
             self.handle_wiki_api()
+        elif path == '/api/search':
+            self.handle_search_api()
         elif path == '/api/chat':
             self.handle_chat_api()
         elif path == '/api/recommend':
@@ -132,6 +135,22 @@ class ComicHelperHandler(http.server.SimpleHTTPRequestHandler):
     def handle_comic_vine_status(self):
         """Return whether Comic Vine is reachable"""
         self.send_json_response({'available': is_api_available()})
+
+    def handle_search_api(self):
+        """Return live internet search context for a query"""
+        query = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        search_term = query.get('q', [''])[0]
+        if search_term:
+            search_data = get_internet_context(search_term)
+        else:
+            search_data = {
+                'query': '',
+                'title': '',
+                'summary': '',
+                'source': 'Internet Search',
+                'url': ''
+            }
+        self.send_json_response(search_data)
 
     def handle_recommend_api(self):
         """Get AI-powered recommendations"""
