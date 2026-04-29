@@ -69,6 +69,8 @@ class ComicHelperHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_chat_post()
         elif path == '/api/recommend':
             self.handle_recommend_post()
+        elif path == '/api/jarvis-comic':
+            self.handle_jarvis_comic_chat()
         else:
             self.send_error(404, 'Not Found')
     
@@ -201,6 +203,62 @@ class ComicHelperHandler(http.server.SimpleHTTPRequestHandler):
                 'comics': comics,
                 'ollama_available': False
             })
+    
+    def handle_jarvis_comic_chat(self):
+        """Handle Jarvis comic chat requests"""
+        content_length = int(self.headers.get('Content-Length', 0))
+        post_data = self.rfile.read(content_length).decode('utf-8')
+        data = json.loads(post_data)
+        
+        comic = data.get('comic', {})
+        message = data.get('message', '')
+        history = data.get('history', [])
+        
+        # Build context about the comic
+        comic_context = f"""You are discussing the comic "{comic.get('title', 'Unknown')}" 
+        - Issue: {comic.get('issue', 'N/A')}
+        - Year: {comic.get('year', 'N/A')}
+        - Writer: {comic.get('writer', 'Unknown')}
+        - Artist: {comic.get('artist', 'Unknown')}
+        - Characters: {', '.join(comic.get('characters', []))}
+        - Description: {comic.get('description', 'N/A')}
+        
+        Provide helpful, informative responses about this comic. Be friendly and enthusiastic."""
+        
+        # Check if Ollama is available
+        status = check_ollama_status()
+        if status['available']:
+            response = chat_with_ai_about_comics(message, comic_context)
+            self.send_json_response({'response': response})
+        else:
+            # Fallback response when Ollama is not available
+            response = self.get_fallback_comic_response(message, comic)
+            self.send_json_response({'response': response})
+    
+    def get_fallback_comic_response(self, message, comic):
+        """Generate fallback responses when Ollama is not available"""
+        lower_message = message.lower()
+        
+        if any(word in lower_message for word in ['story', 'plot', 'about', 'summary']):
+            return f"<strong>Story Overview:</strong><br>{comic.get('description', 'No description available.')}"
+        
+        if any(word in lower_message for word in ['character', 'who', 'characters']):
+            chars = comic.get('characters', [])
+            return f"<strong>Characters in this comic:</strong><br>{', '.join(chars)}.<br><br>Would you like to know more about any specific character?"
+        
+        if any(word in lower_message for word in ['writer', 'author', 'artist', 'draw']):
+            return f"<strong>Creative Team:</strong><br>• <strong>Writer:</strong> {comic.get('writer', 'Unknown')}<br>• <strong>Artist:</strong> {comic.get('artist', 'Unknown')}"
+        
+        if any(word in lower_message for word in ['issue', 'read', 'start', 'when']):
+            return f"<strong>Reading Info:</strong><br>This series runs from {comic.get('issue', 'N/A')} published in {comic.get('year', 'N/A')}."
+        
+        if any(word in lower_message for word in ['hello', 'hi', 'hey', 'greetings']):
+            return f"Hello! I'm Jarvis, your comic assistant. Ask me anything about <strong>{comic.get('title')}</strong>!"
+        
+        if any(word in lower_message for word in ['recommend', 'suggest', 'good', 'start']):
+            return f"<strong>Recommendation:</strong><br>{comic.get('title')} is a great choice! It's known for {comic.get('description', 'its compelling story')}. I'd recommend starting from issue {comic.get('issue', 'the beginning')}."
+        
+        return f"That's a great question about <strong>{comic.get('title')}</strong>! <br><br>I can tell you about:<br>• The story and plot<br>• Characters<br>• The creative team (writer/artist)<br>• Reading order<br><br>What would you like to know?"
     
     def send_json_response(self, data):
         """Send a JSON response"""

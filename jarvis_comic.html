@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jarvis Comic Chat | NerdVerse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;600;700&family=JetBrains+Mono:wght@400;500&family=Orbitron:wght@400;500;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        :root {
+            --jarvis-blue: #00d4ff;
+            --jarvis-glow: rgba(0, 212, 255, 0.5);
+            --jarvis-bg: #0a0f1a;
+            --marvel-red: #ec1d24;
+            --dc-blue: #0476f2;
+            --boys-red: #ff3e3e;
+            --invincible-blue: #00a8ff;
+            --image-purple: #00c787;
+        }
+
+        .jarvis-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 120px 2rem 4rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--jarvis-blue), #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .jarvis-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--jarvis-blue), #00ff88);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 30px var(--jarvis-glow);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 20px var(--jarvis-glow); }
+            50% { box-shadow: 0 0 40px var(--jarvis-glow), 0 0 60px var(--jarvis-glow); }
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .comic-selector {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .comic-selector h3 {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .comic-select-wrapper {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .comic-select {
+            flex: 1;
+            min-width: 250px;
+            padding: 0.75rem 1rem;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            background: var(--surface-elevated);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .comic-select:hover, .comic-select:focus {
+            border-color: var(--jarvis-blue);
+            outline: none;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            min-height: 500px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--primary), #ff6b35);
+            color: white;
+        }
+
+        .message.jarvis {
+            align-self: flex-start;
+            background: linear-gradient(135deg, var(--jarvis-bg), #0d1525);
+            border: 1px solid var(--jarvis-blue);
+            color: var(--text-primary);
+        }
+
+        .message.jarvis::before {
+            content: '🤖';
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .message-content {
+            line-height: 1.6;
+        }
+
+        .message-content strong {
+            color: var(--jarvis-blue);
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 0.5rem;
+            padding: 1rem;
+        }
+
+        .typing-indicator span {
+            width: 10px;
+            height: 10px;
+            background: var(--jarvis-blue);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-indicator span:nth-child(1) { animation-delay: 0s; }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        .chat-input-container {
+            padding: 1rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            background: var(--surface-elevated);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--jarvis-blue);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+        }
+
+        .chat-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .send-btn {
+            padding: 0.75rem 1.5rem;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--jarvis-blue), #00ff88);
+            border: none;
+            border-radius: 8px;
+            color: var(--jarvis-bg);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px var(--jarvis-glow);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .comic-info-card {
+            background: linear-gradient(135deg, var(--jarvis-bg), #0d1525);
+            border: 1px solid var(--jarvis-blue);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .comic-info-card h4 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--jarvis-blue);
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .comic-info-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .comic-info-card .meta {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .comic-info-card .meta span {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .comic-info-card .meta strong {
+            color: var(--text-primary);
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.9rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .back-btn:hover {
+            border-color: var(--jarvis-blue);
+            color: var(--jarvis-blue);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 1.75rem;
+            }
+
+            .jarvis-container {
+                padding: 100px 1rem 2rem;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="logo" onclick="navigateTo('index')">NerdVerse</div>
+        <ul class="nav-links" id="nav-links">
+            <li><a href="index.html" data-page="home">Home</a></li>
+            <li><a href="wiki.html" data-page="wiki">Wiki</a></li>
+            <li><a href="guides.html" data-page="guides">Guides</a></li>
+            <li><a href="marvel.html" data-page="marvel">Marvel</a></li>
+            <li><a href="dcu.html" data-page="dcu">DCU</a></li>
+            <li><a href="comics.html" data-page="comics">Comics</a></li>
+        </ul>
+        <div class="mobile-menu" onclick="toggleMobileMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </nav>
+
+    <div class="jarvis-container">
+        <button class="back-btn" onclick="navigateTo('comics')">
+            ← Back to Comics
+        </button>
+
+        <div class="page-header">
+            <h1>
+                <span class="jarvis-icon">J</span>
+                Jarvis Comic Chat
+            </h1>
+            <p>Ask me anything about your selected comic!</p>
+        </div>
+
+        <!-- Comic Selector -->
+        <div class="comic-selector">
+            <h3>Select a Comic to Discuss</h3>
+            <div class="comic-select-wrapper">
+                <select class="comic-select" id="comic-select">
+                    <option value="">Choose a comic...</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="chat-container">
+            <div class="chat-messages" id="chat-messages">
+                <div class="message jarvis">
+                    <div class="message-content">
+                        <strong>Greetings!</strong> I'm Jarvis, your comic book assistant. 
+                        Select a comic from the dropdown above, then ask me anything about it!
+                        <br><br>
+                        I can tell you about:
+                        <br>• The story and plot
+                        <br>• Characters and their backgrounds
+                        <br>• Creative team (writers, artists)
+                        <br>• Reading order recommendations
+                        <br>• Connections to other comics
+                    </div>
+                </div>
+            </div>
+            <div class="chat-input-container">
+                <input type="text" class="chat-input" id="chat-input" placeholder="Ask about the selected comic..." disabled>
+                <button class="send-btn" id="send-btn" disabled>Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script>
+        // Comic Database (same as comics.html)
+        const comicsDatabase = [
+            // MARVEL
+            { franchise: "marvel", title: "Amazing Spider-Man", issue: "#1-50", year: "2022-2023", characters: ["Spider-Man", "Mary Jane", "Green Goblin", "Vulture"], description: "Peter Parker faces new challenges as Spider-Man while dealing with his personal life.", writer: "Zeb Wells", artist: "John Romiola Jr." },
+            { franchise: "marvel", title: "X-Men Red", issue: "#1-18", year: "2022-2023", characters: ["Storm", "Magneto", "Apocalypse", "Wolverine"], description: "Storm assembles a new team of X-Men to protect Krakoa from emerging threats.", writer: "Al Ewing", artist: "Stefano Caselli" },
+            { franchise: "marvel", title: "Immortal Thor", issue: "#1-18", year: "2023-2024", characters: ["Thor", "Jane Foster", "Mjolnir"], description: "Thor faces cosmic threats as the Immortal God of Thunder.", writer: "Al Ewing", artist: "Dustin Weaver" },
+            { franchise: "marvel", title: "Captain America", issue: "#1-50", year: "2023-2024", characters: ["Captain America", "Bucky", "Red Guardian"], description: "Sam Wilson takes on the shield in this new era of Captain America.", writer: "Jed MacKay", artist: "Carlos Zema" },
+            { franchise: "marvel", title: "Venom", issue: "#1-25", year: "2023-2024", characters: ["Venom", "Eddie Brock", "Knull"], description: "Eddie Brock returns as Venom facing the god of the symbiotes.", writer: "Al Ewing", artist: "Ryan Stegemann" },
+            { franchise: "marvel", title: "Wolverine", issue: "#1-35", year: "2020-2022", characters: ["Wolverine", "Captain America", "Omega Red"], description: "Logan navigates his past and present in this action-packed series.", writer: "Benjamin Percy", artist: "Josh Cassari" },
+            { franchise: "marvel", title: "Avengers", issue: "#1-20", year: "2023-2024", characters: ["Thor", "Captain America", "Iron Man", "Vision"], description: "Earth's Mightiest Heroes face unprecedented threats.", writer: "Jed MacKay", artist: "C.F. Villa" },
+            { franchise: "marvel", title: "Miles Morales: Spider-Man", issue: "#1-30", year: "2022-2024", characters: ["Miles Morales", "Ganke", "Tombstone"], description: "Miles balances being Spider-Man with his life as a teenager.", writer: "Cody Ziglar", artist: "Paco Colab" },
+            // DC
+            { franchise: "dc", title: "Batman", issue: "#1-150", year: "2021-2024", characters: ["Batman", "Joker", "Catwoman", "Scarecrow"], description: "Gotham's Dark Knight faces his greatest challenges yet.", writer: "Chip Zdarsky", artist: "Jorge Jimenez" },
+            { franchise: "dc", title: "Superman", issue: "#1-50", year: "2021-2023", characters: ["Superman", "Lois Lane", "Lex Luthor", "Jon Kent"], description: "Clark Kent faces new threats while protecting Earth.", writer: "Phillip Kennedy Johnson", artist: "Jamal Campbell" },
+            { franchise: "dc", title: "Wonder Woman", issue: "#1-50", year: "2022-2024", characters: ["Wonder Woman", "Steve Trevor", "Cheeta"], description: "Diana fights to protect Themyscira and the mortal world.", writer: "Tom King", artist: "Daniel Sampere" },
+            { franchise: "dc", title: "The Flash", issue: "#1-50", year: "2022-2024", characters: ["Flash", "Kid Flash", "Reverse Flash", "Gorilla Grodd"], description: "Barry Allen races against time to save Central City.", writer: "Joshua Williamson", artist: "Gustavo Duarte" },
+            { franchise: "dc", title: "Green Lantern", issue: "#1-30", year: "2023-2024", characters: ["Hal Jordan", "John Stewart", "Sinestro", "Kilowog"], description: "The Green Lantern Corps faces new cosmic threats.", writer: "Jeremy Adams", artist: "Xermanico" },
+            { franchise: "dc", title: "Nightwing", issue: "#1-50", year: "2022-2024", characters: ["Nightwing", "Batgirl", "Blockbuster"], description: "Dick Grayson finds a new purpose in Blüdhaven.", writer: "Tom Taylor", artist: "Bruno Redondo" },
+            { franchise: "dc", title: "Harley Quinn", issue: "#1-35", year: "2021-2023", characters: ["Harley Quinn", "Poison Ivy", "Joker"], description: "Harley navigates her new life in Coney Island.", writer: "Stephanie Phillips", artist: "Riley Rossmo" },
+            { franchise: "dc", title: "Shazam!", issue: "#1-15", year: "2023-2024", characters: ["Shazam", "Mary Marvel", "Dr. Sivana"], description: "Billy Batson embraces his role as Earth's mightiest mortal.", writer: "Mark Waid", artist: "Dan Mora" },
+            // THE BOYS
+            { franchise: "theboys", title: "The Boys", issue: "#1-72", year: "2019-2024", characters: ["Homelander", "Butcher", "Hughie", "Starlight", "A-Train"], description: "A group of vigilantes take down corrupt superheroes.", writer: "Garth Ennis", artist: "Darick Robertson" },
+            { franchise: "theboys", title: "Herogasm", issue: "#1-6", year: "2022", characters: ["Homelander", "Soldier Boy", "Queen Maeve"], description: "The Supes go to a hedonistic retreat with shocking results.", writer: "Garth Ennis", artist: "Tony K. Vilanova" },
+            { franchise: "theboys", title: "Dawn of the 7", issue: "#1-4", year: "2023", characters: ["The Seven", "Butcher", "Starlight"], description: "The Boys plan their biggest operation yet.", writer: "Garth Ennis", artist: "Darick Robertson" },
+            { franchise: "theboys", title: "Dear Becky", issue: "#1-7", year: "2024", characters: ["Butcher", "Becca", "Ryan"], description: "A backstory exploring Butcher's relationship with his wife.", writer: "Garth Ennis", artist: "Jason Shawn Alexander" },
+            // INVINCIBLE
+            { franchise: "invincible", title: "Invincible", issue: "#1-144", year: "2002-2013", characters: ["Mark Grayson", "Omni-Man", "Atom Eve", "Rudy"], description: "Young hero Mark Grayson learns the truth about his father.", writer: "Robert Kirkman", artist: "Cory Walker" },
+            { franchise: "invincible", title: "Invincible Universe", issue: "#1-12", year: "2023-2024", characters: ["Atom Eve", "Rudy", "Dupli-Kate"], description: "New heroes emerge in the Invincible universe.", writer: "Robert Kirkman", artist: "Ariela" },
+            { franchise: "invincible", title: "Tech Jacket", issue: "#1-12", year: "2014-2015", characters: ["Jack", "Zed", "Tech Jacket"], description: "A teen with a high-tech suit fights alien threats.", writer: "Robert Kirkman", artist: "Jason Walton" },
+            // IMAGE
+            { franchise: "image", title: "Saga", issue: "#1-66", year: "2012-2023", characters: ["Alana", "Marko", "Hazel", "Prince Robot"], description: "A couple from warring species try to raise their family.", writer: "Brian K. Vaughan", artist: "Fiona Staples" },
+            { franchise: "image", title: "Witching Hour", issue: "#1-3", year: "2023", characters: ["Witches", "Lords of Hell"], description: "Three witches judge the souls of the powerful.", writer: "Brian K. Vaughan", artist: "Al Ewing" },
+            { franchise: "image", title: "Spawn", issue: "#1-360+", year: "1992-Present", characters: ["Spawn", "Al Simmons", "Violator", "Cog"], description: "A dead man makes a deal with the devil for revenge.", writer: "Todd McFarlane", artist: "Todd McFarlane" },
+            { franchise: "image", title: "The Walking Dead", issue: "#1-193", year: "2003-2019", characters: ["Rick Grimes", "Michonne", "Negan", "Carl"], description: "Survivors navigate a zombie apocalypse.", writer: "Robert Kirkman", artist: "Charlie Adlard" },
+            { franchise: "image", title: "Paper Girls", issue: "#1-30", year: "2015-2019", characters: ["Caitlin", "KJ", "Mac", "Tara"], description: "Four girls get caught in a time-travel adventure.", writer: "Brian K. Vaughan", artist: "Clara Chiang" },
+            { franchise: "image", title: "Descender", issue: "#1-32", year: "2015-2018", characters: ["Tim-21", "Dr. Quinzel", "Mother"], description: "A robot boy searches for his purpose.", writer: "Jeff Lemire", artist: "Dustin Nguyen" },
+            // INDIE
+            { franchise: "indie", title: "Hellboy", issue: "#1-50", year: "2019-2023", characters: ["Hellboy", "Abe Sapien", "Liz Sherman"], description: "The world's greatest paranormal investigator returns.", writer: "Mike Mignola", artist: "Scott Duich" },
+            { franchise: "indie", title: "The Goon", issue: "#1-40", year: "2020-2023", characters: ["The Goon", "Franky", "Pandy"], description: "A street-fighting man battles supernatural threats.", writer: "Eric Powell", artist: "Eric Powell" },
+            { franchise: "indie", title: "Chew", issue: "#1-60", year: "2009-2016", characters: ["Tony Chu", "Ciby", "Mason"], description: "A detective who can taste crimes solves cases.", writer: "John Layman", artist: "Rob Guillory" },
+            { franchise: "indie", title: "Locke & Key", issue: "#1-18", year: "2017-2021", characters: ["Kinsey", "Rory", "Tyler"], description: "A family discovers magical keys in their home.", writer: "Joe Hill", artist: "Gabriel Rodriguez" },
+            { franchise: "indie", title: "Y: The Last Man", issue: "#1-66", year: "2018-2023", characters: ["Yorick", "355", "Amber"], description: "One man and his monkey survive a plague.", writer: "Brian K. Vaughan", artist: "Pia Guerra" },
+            { franchise: "indie", title: "Fables", issue: "#1-150", year: "2002-2015", characters: ["Bigby", "Snow White", "Fabletown"], description: "Fairy tale characters live in modern New York.", writer: "Bill Willingham", artist: "Mark Buckingham" }
+        ];
+
+        let selectedComic = null;
+        let chatHistory = [];
+
+        // Initialize
+        function init() {
+            populateComicSelect();
+            setupEventListeners();
+            
+            // Check for pre-selected comic from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const comicTitle = urlParams.get('comic');
+            if (comicTitle) {
+                const select = document.getElementById('comic-select');
+                select.value = comicTitle;
+                onComicSelected();
+            }
+        }
+
+        function populateComicSelect() {
+            const select = document.getElementById('comic-select');
+            const franchises = {
+                marvel: 'Marvel',
+                dc: 'DC',
+                theboys: 'The Boys',
+                invincible: 'Invincible',
+                image: 'Image',
+                indie: 'Indie'
+            };
+            
+            // Group by franchise
+            const grouped = {};
+            comicsDatabase.forEach(comic => {
+                const franchise = franchises[comic.franchise] || 'Other';
+                if (!grouped[franchise]) grouped[franchise] = [];
+                grouped[franchise].push(comic);
+            });
+
+            // Create optgroups
+            Object.keys(grouped).forEach(franchise => {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = franchise;
+                grouped[franchise].forEach(comic => {
+                    const option = document.createElement('option');
+                    option.value = comic.title;
+                    option.textContent = `${comic.title} (${comic.issue})`;
+                    optgroup.appendChild(option);
+                });
+                select.appendChild(optgroup);
+            });
+        }
+
+        function setupEventListeners() {
+            const select = document.getElementById('comic-select');
+            const input = document.getElementById('chat-input');
+            const sendBtn = document.getElementById('send-btn');
+
+            select.addEventListener('change', onComicSelected);
+            
+            sendBtn.addEventListener('click', sendMessage);
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+        }
+
+        function onComicSelected() {
+            const select = document.getElementById('comic-select');
+            const input = document.getElementById('chat-input');
+            const sendBtn = document.getElementById('send-btn');
+            
+            selectedComic = comicsDatabase.find(c => c.title === select.value);
+            
+            if (selectedComic) {
+                input.disabled = false;
+                sendBtn.disabled = false;
+                input.focus();
+                
+                // Show comic info in chat
+                addComicInfoMessage();
+            } else {
+                input.disabled = true;
+                sendBtn.disabled = true;
+            }
+        }
+
+        function addComicInfoMessage() {
+            const messages = document.getElementById('chat-messages');
+            const franchiseColors = {
+                marvel: '#ec1d24',
+                dc: '#0476f2',
+                theboys: '#ff3e3e',
+                invincible: '#00a8ff',
+                image: '#00c787',
+                indie: '#ffd700'
+            };
+            const color = franchiseColors[selectedComic.franchise] || '#00d4ff';
+            
+            const infoHtml = `
+                <div class="comic-info-card" style="border-color: ${color}">
+                    <h4 style="color: ${color}">${selectedComic.title}</h4>
+                    <p>${selectedComic.description}</p>
+                    <div class="meta">
+                        <span><strong>Issue:</strong> ${selectedComic.issue}</span>
+                        <span><strong>Year:</strong> ${selectedComic.year}</span>
+                        <span><strong>Writer:</strong> ${selectedComic.writer}</span>
+                        <span><strong>Artist:</strong> ${selectedComic.artist}</span>
+                    </div>
+                    <div class="meta">
+                        <span><strong>Characters:</strong> ${selectedComic.characters.join(', ')}</span>
+                    </div>
+                </div>
+            `;
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message jarvis';
+            messageDiv.innerHTML = `<div class="message-content">${infoHtml}</div>`;
+            messages.appendChild(messageDiv);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function addMessage(content, isUser = false) {
+            const messages = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'jarvis'}`;
+            messageDiv.innerHTML = `<div class="message-content">${content}</div>`;
+            messages.appendChild(messageDiv);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const messages = document.getElementById('chat-messages');
+            const indicator = document.createElement('div');
+            indicator.className = 'message jarvis';
+            indicator.id = 'typing-indicator';
+            indicator.innerHTML = `
+                <div class="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            `;
+            messages.appendChild(indicator);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) indicator.remove();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (!message || !selectedComic) return;
+            
+            // Add user message
+            addMessage(message, true);
+            input.value = '';
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            try {
+                // Call the API to get Jarvis response
+                const response = await fetch('/api/jarvis-comic', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        comic: selectedComic,
+                        message: message,
+                        history: chatHistory
+                    })
+                });
+                
+                hideTypingIndicator();
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addMessage(data.response);
+                    chatHistory.push({ role: 'user', content: message });
+                    chatHistory.push({ role: 'assistant', content: data.response });
+                } else {
+                    // Fallback response if API not available
+                    addMessage(getFallbackResponse(message));
+                }
+            } catch (error) {
+                hideTypingIndicator();
+                // Use fallback responses
+                addMessage(getFallbackResponse(message));
+            }
+        }
+
+        function getFallbackResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            // Check for specific questions
+            if (lowerMessage.includes('story') || lowerMessage.includes('plot') || lowerMessage.includes('about')) {
+                return `<strong>Story Overview:</strong><br>${selectedComic.description}`;
+            }
+            
+            if (lowerMessage.includes('character') || lowerMessage.includes('who')) {
+                return `<strong>Characters in this comic:</strong><br>${selectedComic.characters.join(', ')}.<br><br>Would you like to know more about any specific character?`;
+            }
+            
+            if (lowerMessage.includes('writer') || lowerMessage.includes('author') || lowerMessage.includes('artist')) {
+                return `<strong>Creative Team:</strong><br>• <strong>Writer:</strong> ${selectedComic.writer}<br>• <strong>Artist:</strong> ${selectedComic.artist}`;
+            }
+            
+            if (lowerMessage.includes('issue') || lowerMessage.includes('read') || lowerMessage.includes('start')) {
+                return `<strong>Reading Info:</strong><br>This series runs from ${selectedComic.issue} published in ${selectedComic.year}.`;
+            }
+            
+            if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
+                return `Hello! I'm Jarvis, your comic assistant. Ask me anything about <strong>${selectedComic.title}</strong>!`;
+            }
+            
+            // Default response
+            return `That's a great question about <strong>${selectedComic.title}</strong>! <br><br>I can tell you about:<br>• The story and plot<br>• Characters<br>• The creative team (writer/artist)<br>• Reading order<br><br>What would you like to know?`;
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
