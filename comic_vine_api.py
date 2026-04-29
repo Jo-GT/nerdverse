@@ -34,8 +34,13 @@ def fetch_from_comic_vine(endpoint, params=None):
     url = f"{COMIC_VINE_BASE_URL}/{endpoint}?{query_string}"
     
     try:
-        req = urllib.request.Request(url)
-        req.add_header('User-Agent', 'ComicHelper/1.0')
+        req = urllib.request.Request(
+            url,
+            headers={
+                'User-Agent': 'ComicHelper/1.0',
+                'Accept': 'application/json'
+            }
+        )
         
         with urllib.request.urlopen(req, timeout=15) as response:
             data = json.loads(response.read().decode('utf-8'))
@@ -47,7 +52,13 @@ def fetch_from_comic_vine(endpoint, params=None):
                 print(f"Comic Vine Error: {data.get('error')}")
                 return {'results': [], 'number_of_total_results': 0}
     except urllib.error.HTTPError as e:
+        try:
+            error_body = e.read().decode('utf-8')
+        except Exception:
+            error_body = None
         print(f"Comic Vine API Error: {e.code} - {e.reason}")
+        if error_body:
+            print(f"Comic Vine Error Body: {error_body}")
         _api_available = False
         return {'results': [], 'number_of_total_results': 0}
     except urllib.error.URLError as e:
