@@ -6,7 +6,25 @@
 // Configuration
 const OLLAMA_URL = 'http://localhost:11434/api/generate';
 const DEFAULT_MODEL = 'mistral';
+const VISION_MODEL = 'llava'; // Vision-capable model for image processing
 const IMAGE_ATTACHMENT_NOTE = 'An image attachment is included with the user request. Use it as supplementary context for the comic question.';
+
+// Available models cache
+let availableModels = [];
+
+// Check available models on startup
+async function checkAvailableModels() {
+    try {
+        const response = await fetch('http://localhost:11434/api/tags');
+        if (response.ok) {
+            const data = await response.json();
+            availableModels = data.models?.map(m => m.name) || [];
+        }
+    } catch (error) {
+        console.warn('Could not check available Ollama models:', error);
+        availableModels = [DEFAULT_MODEL]; // Fallback
+    }
+}
 
 let trackedComics = [];
 
@@ -25,10 +43,15 @@ async function getMessageImageData(page) {
 
     const file = fileInput.files[0];
     const dataUrl = await readFileAsDataURL(file);
+    
+    // Extract base64 data from data URL (remove "data:image/jpeg;base64," prefix)
+    const base64Data = dataUrl.split(',')[1];
+    
     return {
         name: file.name,
         type: file.type,
-        data: dataUrl
+        data: base64Data, // Send just the base64 data, not the full data URL
+        fullDataUrl: dataUrl // Keep full URL for display purposes
     };
 }
 
@@ -52,12 +75,18 @@ function initialiseImageUpload(page) {
         }
 
         const previewUrl = URL.createObjectURL(file);
+        const visionNote = availableModels.includes(VISION_MODEL) 
+            ? '<span style="color: var(--secondary);">🤖 AI will analyze this image</span>'
+            : '<span style="color: var(--text-secondary);">📎 Image attached (install vision models for AI analysis)</span>';
+
         preview.innerHTML = `
             <div class="image-preview-card">
                 <img src="${previewUrl}" alt="${escapeHtml(file.name)} preview">
                 <div class="image-preview-meta">
                     <strong>${escapeHtml(file.name)}</strong>
                     <span>${Math.round(file.size / 1024)} KB</span>
+                    <br>
+                    ${visionNote}
                 </div>
             </div>
         `;
@@ -140,6 +169,7 @@ Present information in a clear, organized timeline format. Reference specific fi
  * Initialise the application
  */
 document.addEventListener('DOMContentLoaded', function() {
+    checkAvailableModels(); // Check available models first
     initialiseNavigation();
     initialiseChatListeners();
     initialiseGenreTags();
@@ -623,14 +653,14 @@ async function sendMessage(page) {
     input.disabled = true;
     sendBtn.disabled = true;
     
-    // Add user message
-    addMessage(page, message, 'user');
+    const imageData = await getMessageImageData(page);
+    
+    // Add user message with image if present
+    addMessage(page, message, 'user', imageData);
     input.value = '';
     
-    const imageData = await getMessageImageData(page);
-    if (imageData) {
-        addMessage(page, `Attached image: ${escapeHtml(imageData.name)}`,'user');
-    }
+    // Clear image upload after sending
+    clearImageUpload(page);
     
     // Show typing indicator
     showTypingIndicator(page);
@@ -658,17 +688,39 @@ async function sendMessage(page) {
 /**
  * Add a message to the chat
  */
-function addMessage(page, content, sender) {
+function addMessage(page, content, sender, imageData = null) {
     const container = document.getElementById(`${page}-messages`);
     if (!container) return;
     
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${sender}`;
+    
+    let messageContent = '';
     if (sender === 'ai') {
-        messageDiv.innerHTML = `<div class="message-label">J.A.R.V.I.S.</div><p>${escapeHtml(content)}</p>`;
+        messageContent = `<div class="message-label">J.A.R.V.I.S.</div><p>${escapeHtml(content)}</p>`;
     } else {
-        messageDiv.innerHTML = `<div class="message-label">You</div><p>${escapeHtml(content)}</p>`;
+        messageContent = `<div class="message-label">You</div>`;
+        
+        // Add image if present
+        if (imageData) {
+            const visionStatus = availableModels.includes(VISION_MODEL) 
+                ? '<span style="color: var(--secondary)">🤖 AI can analyze this</span>'
+                : '<span style="color: var(--text-secondary)">📎 Image attached</span>';
+            
+            messageContent += `
+                <div class="message-image">
+                    <img src="${escapeHtml(imageData.fullDataUrl)}" alt="${escapeHtml(imageData.name)}" style="max-width: 200px; max-height: 200px; border-radius: 8px; margin-bottom: 0.5rem;">
+                    <div class="image-caption">
+                        📎 ${escapeHtml(imageData.name)} • ${visionStatus}
+                    </div>
+                </div>
+            `;
+        }
+        
+        messageContent += `<p>${escapeHtml(content)}</p>`;
     }
+    
+    messageDiv.innerHTML = messageContent;
     container.appendChild(messageDiv);
     container.scrollTop = container.scrollHeight;
 }
@@ -757,9 +809,22 @@ async function getAIResponse(page, message, attachment = null) {
     const systemPrompt = SYSTEM_PROMPTS[page];
     let prompt = systemPrompt;
 
+    // Determine which model to use
+    let modelToUse = DEFAULT_MODEL;
+    let images = null;
+    let visionModelAvailable = availableModels.includes(VISION_MODEL);
+
     if (attachment) {
-        prompt += `\n\n${IMAGE_ATTACHMENT_NOTE}`;
-        prompt += `\n\nThe user attached an image named ${attachment.name}. Use the image as part of your reasoning if it helps answer the comic-related question.`;
+        if (visionModelAvailable) {
+            // Use vision model for image processing
+            modelToUse = VISION_MODEL;
+            images = [attachment.data]; // Ollama expects base64 encoded images
+            prompt += `\n\nThe user has attached an image. Analyze the image and use it as context to help answer their comic-related question. Describe what you see in the image and how it relates to comics if applicable.`;
+        } else {
+            // Fallback: mention the image in text prompt
+            prompt += `\n\n${IMAGE_ATTACHMENT_NOTE}`;
+            prompt += `\n\nThe user attached an image named ${attachment.name}. Although I cannot directly analyze images (vision models not available), please consider that an image has been attached and provide guidance on how images could help answer comic-related questions.`;
+        }
     }
 
     if (page === 'wiki') {
@@ -785,23 +850,30 @@ async function getAIResponse(page, message, attachment = null) {
 
     prompt += `\n\nUser question: ${message}`;
 
+    const requestBody = {
+        model: modelToUse,
+        prompt: prompt,
+        stream: false
+    };
+
+    // Add images if present and vision model is available
+    if (images && visionModelAvailable) {
+        requestBody.images = images;
+    }
+
     const response = await fetch(OLLAMA_URL, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-            model: DEFAULT_MODEL,
-            prompt: prompt,
-            stream: false
-        })
+        body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
         if (response.status === 0) {
             throw new Error('Cannot connect to Ollama. Please make sure Ollama is running on your computer.');
         }
-        throw new Error('Ollama is not running. Please start Ollama and try again.');
+        throw new Error(`Ollama error: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();

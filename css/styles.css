@@ -493,11 +493,38 @@ main {
     overflow: hidden;
 }
 
-.image-preview-card img {
-    width: 90px;
-    height: 90px;
-    object-fit: cover;
-    border-radius: 12px;
+.message-image {
+    margin-bottom: 0.75rem;
+    text-align: center;
+    position: relative;
+}
+
+.message-image img {
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    transition: border-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.message-image img:hover {
+    border-color: var(--primary);
+    transform: scale(1.02);
+}
+
+.image-caption {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.message.user .image-caption {
+    color: var(--secondary);
+    font-weight: 500;
+}
     border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
@@ -622,6 +649,36 @@ main {
     font-size: 0.95rem;
 }
 
+.chat-upload-row input[type="file"] {
+    display: none;
+}
+
+.chat-upload-row label[for*="image-upload"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    margin-top: 0.5rem;
+}
+
+.chat-upload-row label[for*="image-upload"]:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+}
+
+.chat-upload-row label[for*="image-upload"]:active {
+    transform: translateY(0);
+}
+
 .tracker-results-panel {
     display: flex;
     flex-direction: column;
@@ -709,16 +766,41 @@ main {
 
 .progress-track {
     width: 100%;
-    height: 12px;
-    background: rgba(255,255,255,0.08);
+    height: 14px;
+    background: rgba(255,255,255,0.1);
     border-radius: 999px;
     overflow: hidden;
+    position: relative;
 }
 
 .progress-fill {
     height: 100%;
     background: linear-gradient(135deg, var(--secondary), var(--primary));
     border-radius: inherit;
+    transition: width 0.5s ease;
+    position: relative;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.progress-text {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
 }
 
 .tracker-actions,
@@ -732,10 +814,24 @@ main {
 .tracker-card-actions button {
     padding: 0.65rem 0.9rem;
     font-size: 0.85rem;
+    border-radius: 12px;
+    border: none;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.tracker-card-actions button:hover {
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .tracker-summary-panel {
     margin-top: 2rem;
+    padding: 1.5rem;
+    background: rgba(10, 10, 15, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
 }
 
 .tracker-summary-header {
@@ -744,6 +840,7 @@ main {
     flex-wrap: wrap;
     gap: 1rem;
     align-items: center;
+    margin-bottom: 1rem;
 }
 
 .tracker-summary-text {
@@ -758,6 +855,7 @@ main {
     background: rgba(0, 212, 170, 0.15);
     color: var(--secondary);
     border: 1px solid rgba(0, 212, 170, 0.2);
+    font-weight: 600;
 }
 
 @media (max-width: 960px) {
