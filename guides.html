@@ -20,6 +20,7 @@
             <li><a href="marvel.html" data-page="marvel">Marvel</a></li>
             <li><a href="dcu.html" data-page="dcu">DCU</a></li>
             <li><a href="comics.html" data-page="comics">Comics</a></li>
+            <li><a href="tracking.html" data-page="tracking">Tracker</a></li>
         </ul>
         <div class="mobile-menu" onclick="toggleMobileMenu()">
             <span></span>
@@ -70,6 +71,11 @@
             <div class="chat-input">
                 <input type="text" id="guides-input" placeholder="Ask for a guide or recommendation...">
                 <button id="guides-send">Send</button>
+            </div>
+            <div class="chat-upload-row">
+                <label for="guides-image-upload">Attach an image (optional):</label>
+                <input id="guides-image-upload" type="file" accept="image/*">
+                <div id="guides-image-preview" class="image-preview"></div>
             </div>
         </div>
     </main>

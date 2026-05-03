@@ -461,6 +461,317 @@ main {
 }
 
 .btn-secondary {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.image-preview,
+.tracker-search-results,
+.tracker-cards,
+.chat-upload-row {
+    margin-top: 1rem;
+}
+
+.image-preview {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.image-preview-card {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.image-preview-card img {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.image-preview-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    color: var(--text-secondary);
+}
+
+.tracker-page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 120px 2rem 4rem;
+    background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%);
+    min-height: 100vh;
+}
+
+.tracker-title h1 {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #ff6b35, #f7931e, #00d4ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-align: center;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from { text-shadow: 0 0 20px rgba(255, 107, 53, 0.5); }
+    to { text-shadow: 0 0 30px rgba(0, 212, 255, 0.8); }
+}
+
+.tracker-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.tracker-panel {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 2rem;
+    box-shadow: 0 20px 70px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.tracker-panel:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 30px 100px rgba(0, 0, 0, 0.4);
+}
+
+.tracker-panel h2 {
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+.tracker-search-row,
+.tracker-add-manual {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.tracker-search-row input,
+.tracker-add-manual input,
+.tracker-upload-row input {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.tracker-search-row input:focus,
+.tracker-add-manual input:focus,
+.tracker-upload-row input:focus {
+    border-color: #00d4ff;
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+    outline: none;
+}
+
+.tracker-search-row button,
+.tracker-add-manual button {
+    min-width: 140px;
+    padding: 1rem 1.5rem;
+    border-radius: 14px;
+    border: none;
+    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tracker-search-row button:hover,
+.tracker-add-manual button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(255, 107, 53, 0.4);
+}
+
+.tracker-upload-row,
+.chat-upload-row {
+    margin-top: 1.5rem;
+    display: grid;
+    gap: 0.75rem;
+}
+
+.tracker-upload-row label,
+.chat-upload-row label {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.tracker-results-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 450px;
+}
+
+.tracker-search-results {
+    flex: 1;
+    display: grid;
+    gap: 1.5rem;
+}
+
+.tracker-help-text {
+    color: var(--text-secondary);
+}
+
+.tracker-card,
+.tracker-search-card {
+    background: rgba(10, 10, 15, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+}
+
+.tracker-card:hover,
+.tracker-search-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+}
+
+.tracker-card.ai-suggested,
+.tracker-search-card.ai-suggested {
+    border-color: #00d4ff;
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+}
+
+.tracker-card img,
+.tracker-search-card img {
+    width: 120px;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    transition: border-color 0.3s ease;
+}
+
+.tracker-card.ai-suggested img,
+.tracker-search-card.ai-suggested img {
+    border-color: #00d4ff;
+}
+
+.tracker-card-body,
+.tracker-search-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.tracker-card-title,
+.tracker-search-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary);
+    line-height: 1.3;
+}
+
+.tracker-card-meta,
+.tracker-search-meta {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.tracker-card-progress {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.progress-track {
+    width: 100%;
+    height: 12px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(135deg, var(--secondary), var(--primary));
+    border-radius: inherit;
+}
+
+.tracker-actions,
+.tracker-card-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 0.75rem;
+}
+
+.tracker-card-actions button {
+    padding: 0.65rem 0.9rem;
+    font-size: 0.85rem;
+}
+
+.tracker-summary-panel {
+    margin-top: 2rem;
+}
+
+.tracker-summary-header {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+}
+
+.tracker-summary-text {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.ai-badge {
+    padding: 0.5rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    background: rgba(0, 212, 170, 0.15);
+    color: var(--secondary);
+    border: 1px solid rgba(0, 212, 170, 0.2);
+}
+
+@media (max-width: 960px) {
+    .tracker-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tracker-card,
+    .tracker-search-card {
+        grid-template-columns: 1fr;
+    }
+}
+
+.btn-secondary {
     background: linear-gradient(135deg, var(--secondary), #00f5c4);
     color: var(--bg);
     box-shadow: 0 4px 15px rgba(0, 212, 170, 0.4);

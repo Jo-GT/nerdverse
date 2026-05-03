@@ -19,6 +19,7 @@
             <li><a href="guides.html" data-page="guides">Guides</a></li>
             <li><a href="marvel.html" data-page="marvel">Marvel</a></li>
             <li><a href="dcu.html" data-page="dcu">DCU</a></li>
+            <li><a href="tracking.html" data-page="tracking">Tracker</a></li>
         </ul>
         <div class="mobile-menu" onclick="toggleMobileMenu()">
             <span></span>
@@ -62,6 +63,11 @@
             <div class="chat-input">
                 <input type="text" id="personalized-input" placeholder="Describe what you're looking for in detail...">
                 <button id="personalized-send">Send</button>
+            </div>
+            <div class="chat-upload-row">
+                <label for="personalized-image-upload">Attach an image (optional):</label>
+                <input id="personalized-image-upload" type="file" accept="image/*">
+                <div id="personalized-image-preview" class="image-preview"></div>
             </div>
         </div>
     </main>

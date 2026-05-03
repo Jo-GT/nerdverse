@@ -6,6 +6,63 @@
 // Configuration
 const OLLAMA_URL = 'http://localhost:11434/api/generate';
 const DEFAULT_MODEL = 'mistral';
+const IMAGE_ATTACHMENT_NOTE = 'An image attachment is included with the user request. Use it as supplementary context for the comic question.';
+
+let trackedComics = [];
+
+async function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+    });
+}
+
+async function getMessageImageData(page) {
+    const fileInput = document.getElementById(`${page}-image-upload`);
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) return null;
+
+    const file = fileInput.files[0];
+    const dataUrl = await readFileAsDataURL(file);
+    return {
+        name: file.name,
+        type: file.type,
+        data: dataUrl
+    };
+}
+
+function clearImageUpload(page) {
+    const fileInput = document.getElementById(`${page}-image-upload`);
+    const preview = document.getElementById(`${page}-image-preview`);
+    if (fileInput) fileInput.value = '';
+    if (preview) preview.innerHTML = '';
+}
+
+function initialiseImageUpload(page) {
+    const fileInput = document.getElementById(`${page}-image-upload`);
+    const preview = document.getElementById(`${page}-image-preview`);
+    if (!fileInput || !preview) return;
+
+    fileInput.addEventListener('change', () => {
+        const file = fileInput.files[0];
+        if (!file) {
+            preview.innerHTML = '';
+            return;
+        }
+
+        const previewUrl = URL.createObjectURL(file);
+        preview.innerHTML = `
+            <div class="image-preview-card">
+                <img src="${previewUrl}" alt="${escapeHtml(file.name)} preview">
+                <div class="image-preview-meta">
+                    <strong>${escapeHtml(file.name)}</strong>
+                    <span>${Math.round(file.size / 1024)} KB</span>
+                </div>
+            </div>
+        `;
+    });
+}
 
 // J.A.R.V.I.S. Personality System Prompts
 const JARVIS_PERSONALITY = `You are J.A.R.V.I.S. - Just A Rather Very Intelligent System. 
@@ -86,6 +143,10 @@ document.addEventListener('DOMContentLoaded', function() {
     initialiseNavigation();
     initialiseChatListeners();
     initialiseGenreTags();
+    initialiseImageUpload('wiki');
+    initialiseImageUpload('guides');
+    initialiseImageUpload('personalized');
+    initialiseTrackingPage();
     if (document.getElementById('recommendations-results')) {
         getRecommendations();
     }
@@ -286,6 +347,257 @@ function initialiseGenreTags() {
     });
 }
 
+function initialiseTrackingPage() {
+    if (!document.getElementById('tracking-page')) return;
+
+    const searchInput = document.getElementById('tracker-search-input');
+    const searchBtn = document.getElementById('tracker-search-btn');
+    const addBtn = document.getElementById('tracker-add-btn');
+
+    if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') fetchTrackerSearch();
+        });
+    }
+
+    if (searchBtn) {
+        searchBtn.addEventListener('click', fetchTrackerSearch);
+    }
+
+    if (addBtn) {
+        addBtn.addEventListener('click', async () => {
+            const file = document.getElementById('tracker-image-upload')?.files?.[0];
+            if (!file) return;
+
+            // Use AI to identify comic from image
+            await identifyComicFromImage(file);
+        });
+    }
+
+    loadTrackedComics();
+    displayTrackerCards();
+}
+
+async function fetchTrackerSearch() {
+    const query = document.getElementById('tracker-search-input')?.value.trim();
+    const resultsContainer = document.getElementById('tracker-search-results');
+    if (!resultsContainer) return;
+    if (!query) {
+        resultsContainer.innerHTML = '<p class="tracker-help-text">Type a comic title or issue to search Comic Vine.</p>';
+        return;
+    }
+
+    resultsContainer.innerHTML = '<div class="typing-indicator" style="justify-content: flex-start;"><span></span><span></span><span></span></div>';
+
+    try {
+        const response = await fetch(`/api/comics?q=${encodeURIComponent(query)}`);
+        if (!response.ok) throw new Error('Search failed');
+        const results = await response.json();
+        renderTrackerSearchResults(Array.isArray(results) ? results.slice(0, 6) : []);
+    } catch (error) {
+        resultsContainer.innerHTML = `<p class="tracker-help-text">Unable to search Comic Vine: ${escapeHtml(error.message)}</p>`;
+    }
+}
+
+function renderTrackerSearchResults(results, aiSuggestion = null) {
+    const resultsContainer = document.getElementById('tracker-search-results');
+    if (!resultsContainer) return;
+    if (!results || results.length === 0) {
+        resultsContainer.innerHTML = '<p class="tracker-help-text">No comic issues found. Try a different search phrase.</p>';
+        return;
+    }
+
+    resultsContainer.innerHTML = results.map((comic, index) => {
+        const imageUrl = comic.image || comic.image?.medium_url || '';
+        const title = comic.title || comic.name || comic.volume?.name || 'Unknown Title';
+        const issue = comic.issue_number ? `Issue ${comic.issue_number}` : '';
+        const series = comic.series || comic.volume || '';
+        const description = comic.description ? comic.description.replace(/<[^>]+>/g, '').slice(0, 120) : 'No description available.';
+        const isAiSuggestion = aiSuggestion && title.toLowerCase().includes(aiSuggestion.toLowerCase());
+
+        return `
+            <div class="tracker-search-card ${isAiSuggestion ? 'ai-suggested' : ''}">
+                ${isAiSuggestion ? '<div class="ai-badge">🤖 AI Suggested</div>' : ''}
+                <img src="${escapeHtml(imageUrl || 'images/placeholder.png')}" alt="${escapeHtml(title)}">
+                <div class="tracker-search-body">
+                    <div class="tracker-search-title">${escapeHtml(title)}</div>
+                    <div class="tracker-search-meta">${escapeHtml(series)} ${escapeHtml(issue)}</div>
+                    <div class="tracker-search-meta">${escapeHtml(description)}</div>
+                    <div class="tracker-card-actions">
+                        <button class="btn btn-primary" onclick="addTrackedComicFromSearch(${index})">Add to Tracker</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    window.currentSearchResults = results;
+}
+
+function addTrackedComicFromSearch(index) {
+    const results = window.currentSearchResults || [];
+    const comic = results[index];
+    if (!comic) return;
+
+    const tracked = {
+        id: comic.id || Date.now(),
+        title: comic.title || comic.name || comic.volume?.name || 'Unknown Title',
+        series: comic.series || comic.volume || '',
+        issue_number: comic.issue_number || '',
+        description: comic.description ? comic.description.replace(/<[^>]+>/g, '') : 'No description available.',
+        image: comic.image || comic.image?.medium_url || '',
+        release_date: comic.release_date || comic.cover_date || '',
+        progress: 0,
+        characters: comic.character_credits || [],
+        creators: comic.person_credits || []
+    };
+
+    addTrackedComic(tracked);
+}
+
+function addTrackedComic(comic) {
+    const exists = trackedComics.some(item => item.title === comic.title && item.issue_number === comic.issue_number);
+    if (exists) {
+        alert('This comic is already in your tracker.');
+        return;
+    }
+
+    trackedComics.unshift(comic);
+    saveTrackedComics();
+    displayTrackerCards();
+}
+
+function loadTrackedComics() {
+    const saved = localStorage.getItem('nerdverseTrackedComics');
+    if (saved) {
+        try {
+            trackedComics = JSON.parse(saved);
+        } catch (error) {
+            trackedComics = [];
+        }
+    }
+}
+
+function saveTrackedComics() {
+    localStorage.setItem('nerdverseTrackedComics', JSON.stringify(trackedComics));
+}
+
+function displayTrackerCards() {
+    const container = document.getElementById('tracker-cards');
+    const summary = document.getElementById('tracker-summary');
+    if (!container || !summary) return;
+
+    if (!trackedComics.length) {
+        summary.textContent = 'You have no tracked comics yet. Add one from Comic Vine or manual entry.';
+        container.innerHTML = '';
+        return;
+    }
+
+    summary.textContent = `You are tracking ${trackedComics.length} ${trackedComics.length === 1 ? 'comic' : 'comics'} now.`;
+    container.innerHTML = trackedComics.map((comic, index) => {
+        const imageUrl = comic.image || 'images/placeholder.png';
+        const issue = comic.issue_number ? `Issue ${comic.issue_number}` : comic.release_date || '';
+        return `
+            <div class="tracker-card">
+                <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(comic.title)}">
+                <div class="tracker-card-body">
+                    <div class="tracker-card-title">${escapeHtml(comic.title)}</div>
+                    <div class="tracker-card-meta">${escapeHtml(comic.series)} ${escapeHtml(issue)}</div>
+                    <div class="tracker-card-meta">${escapeHtml(comic.description.slice(0, 110))}...</div>
+                    <div class="tracker-card-progress">
+                        <label>Progress: ${comic.progress}%</label>
+                        <div class="progress-track"><div class="progress-fill" style="width: ${comic.progress}%"></div></div>
+                    </div>
+                    <div class="tracker-card-actions">
+                        <button class="btn btn-secondary" onclick="updateComicProgress(${index}, -10)">-10%</button>
+                        <button class="btn btn-primary" onclick="updateComicProgress(${index}, 10)">+10%</button>
+                        <button class="btn btn-secondary" onclick="openJarvisForComic(${index})">Discuss with Jarvis</button>
+                        <button class="btn btn-secondary" onclick="removeTrackedComic(${index})">Remove</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateComicProgress(index, delta) {
+    if (!trackedComics[index]) return;
+    trackedComics[index].progress = Math.min(100, Math.max(0, trackedComics[index].progress + delta));
+    saveTrackedComics();
+    displayTrackerCards();
+}
+
+function removeTrackedComic(index) {
+    trackedComics.splice(index, 1);
+    saveTrackedComics();
+    displayTrackerCards();
+}
+
+function openJarvisForComic(index) {
+    const comic = trackedComics[index];
+    if (!comic) return;
+    const query = encodeURIComponent(comic.title);
+    window.location.href = `jarvis_comic.html?comic=${query}`;
+}
+
+async function identifyComicFromImage(file) {
+    const resultsContainer = document.getElementById('tracker-search-results');
+    if (!resultsContainer) return;
+
+    resultsContainer.innerHTML = '<div class="typing-indicator" style="justify-content: flex-start;"><span></span><span></span><span></span></div>';
+
+    try {
+        // First, get image data
+        const imageData = await readFileAsDataURL(file);
+        
+        // Use AI to describe the image and suggest search terms
+        const aiPrompt = `You are a comic book expert. Analyze this image of a comic book cover. Describe what you see: the title, characters, publisher, issue number, and any distinctive visual elements. Then suggest the most likely comic title and issue number for searching Comic Vine. Respond in this format:
+Title: [suggested title]
+Issue: [suggested issue number]
+Description: [brief description]`;
+
+        const response = await fetch(OLLAMA_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: DEFAULT_MODEL,
+                prompt: aiPrompt,
+                stream: false
+            })
+        });
+
+        if (!response.ok) throw new Error('AI analysis failed');
+
+        const data = await response.json();
+        const aiResponse = data.response;
+
+        // Parse AI response
+        const titleMatch = aiResponse.match(/Title:\s*(.+)/i);
+        const issueMatch = aiResponse.match(/Issue:\s*(.+)/i);
+        const descMatch = aiResponse.match(/Description:\s*(.+)/i);
+
+        const suggestedTitle = titleMatch ? titleMatch[1].trim() : 'Unknown';
+        const suggestedIssue = issueMatch ? issueMatch[1].trim() : '';
+        const description = descMatch ? descMatch[1].trim() : aiResponse;
+
+        // Search Comic Vine with suggested title
+        const searchQuery = suggestedTitle + (suggestedIssue ? ` ${suggestedIssue}` : '');
+        const searchResponse = await fetch(`/api/comics?q=${encodeURIComponent(searchQuery)}`);
+        if (!searchResponse.ok) throw new Error('Comic Vine search failed');
+
+        const searchResults = await searchResponse.json();
+        if (!Array.isArray(searchResults) || searchResults.length === 0) {
+            resultsContainer.innerHTML = `<p class="tracker-help-text">No comics found matching the image. Try a different image or search manually.</p>`;
+            return;
+        }
+
+        // Show top results with AI suggestion highlighted
+        renderTrackerSearchResults(searchResults.slice(0, 6), suggestedTitle);
+
+    } catch (error) {
+        resultsContainer.innerHTML = `<p class="tracker-help-text">Unable to identify comic from image: ${escapeHtml(error.message)}</p>`;
+    }
+}
+
 /**
  * Set a quick prompt in the input field
  */
@@ -315,11 +627,16 @@ async function sendMessage(page) {
     addMessage(page, message, 'user');
     input.value = '';
     
+    const imageData = await getMessageImageData(page);
+    if (imageData) {
+        addMessage(page, `Attached image: ${escapeHtml(imageData.name)}`,'user');
+    }
+    
     // Show typing indicator
     showTypingIndicator(page);
     
     try {
-        const response = await getAIResponse(page, message);
+        const response = await getAIResponse(page, message, imageData);
         hideTypingIndicator(page);
         addMessage(page, response, 'ai');
 
@@ -436,9 +753,14 @@ async function fetchComicVineContext(query) {
 /**
  * Get AI response from Ollama
  */
-async function getAIResponse(page, message) {
+async function getAIResponse(page, message, attachment = null) {
     const systemPrompt = SYSTEM_PROMPTS[page];
     let prompt = systemPrompt;
+
+    if (attachment) {
+        prompt += `\n\n${IMAGE_ATTACHMENT_NOTE}`;
+        prompt += `\n\nThe user attached an image named ${attachment.name}. Use the image as part of your reasoning if it helps answer the comic-related question.`;
+    }
 
     if (page === 'wiki') {
         const wikiContext = await fetchWikiContext(message);
