@@ -8,7 +8,7 @@ const OLLAMA_URL = 'http://localhost:11434/api/generate';
 const DEFAULT_MODEL = 'mistral';
 const VISION_MODEL = 'llava'; // Vision-capable model for image processing
 const IMAGE_ATTACHMENT_NOTE = 'An image attachment is included with the user request. Use it as supplementary context for the comic question.';
-const CLERK_FRONTEND_API = 'pk_test_d29ya2luZy1jb3diaXJkLTEzLmNsZXJrLmFjY291bnRzLmRldiQ';
+const CLERK_PUBLISHABLE_KEY = 'pk_test_d29ya2luZy1jb3diaXJkLTEzLmNsZXJrLmFjY291bnRzLmRldiQ';
 const CLERK_DOMAIN = 'working-cowbird-13.clerk.accounts.dev';
 
 // Available models cache
@@ -61,7 +61,7 @@ async function loadClerkClient() {
         throw new Error('Clerk library is not loaded');
     }
     clerkClient = await Clerk.load({ 
-        frontendApi: CLERK_FRONTEND_API,
+        publishableKey: CLERK_PUBLISHABLE_KEY,
         domain: CLERK_DOMAIN
     });
     return clerkClient;

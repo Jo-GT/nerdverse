@@ -11,7 +11,7 @@
 </head>
 <body>
     <nav>
-        <div class="logo" onclick="navigateTo('index')">NerdVerse</div>
+        <div class="logo" onclick="window.location.href='index.html'">NerdVerse</div>
         <ul class="nav-links" id="nav-links">
             <li><a href="index.html" data-page="home">Home</a></li>
             <li><a href="wiki.html" data-page="wiki">Wiki</a></li>
@@ -35,9 +35,9 @@
                     <h1>Welcome to NerdVerse</h1>
                     <p>Sign in with Clerk to access your comic tracker and save your collection across devices.</p>
                 </div>
-                <div class="login-panel">
-                    <button id="clerk-sign-in-btn" class="btn btn-primary">Sign in with Clerk</button>
-                    <p class="tracker-help-text">If you already have a Clerk account, use it to sign in. Otherwise, create one during the Clerk flow.</p>
+                <div class="login-panel" id="login-panel">
+                    <div id="sign-in"></div>
+                    <p class="tracker-help-text">If you already have a Clerk account, sign in here. Otherwise, create one during the Clerk flow.</p>
                 </div>
             </div>
         </section>
@@ -47,38 +47,43 @@
         <p>NerdVerse - Powered by <a href="https://ollama.com" target="_blank">Ollama</a></p>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+    <script
+        defer
+        crossorigin="anonymous"
+        data-clerk-publishable-key="pk_test_d29ya2luZy1jb3diaXJkLTEzLmNsZXJrLmFjY291bnRzLmRldiQ"
+        src="https://working-cowbird-13.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js"
+        type="text/javascript"
+    ></script>
+    <script
+        defer
+        crossorigin="anonymous"
+        src="https://working-cowbird-13.clerk.accounts.dev/npm/@clerk/ui@1/dist/ui.browser.js"
+        type="text/javascript"
+    ></script>
     <script>
-        const CLERK_FRONTEND_API = 'pk_test_d29ya2luZy1jb3diaXJkLTEzLmNsZXJrLmFjY291bnRzLmRldiQ';
-        const CLERK_DOMAIN = 'working-cowbird-13.clerk.accounts.dev';
-
-        async function startClerkSignIn() {
-            const clerk = await Clerk.load({ 
-                frontendApi: CLERK_FRONTEND_API,
-                domain: CLERK_DOMAIN
-            });
-            await clerk.openSignIn({ afterSignInUrl: 'tracking.html' });
-        }
-
-        document.addEventListener('DOMContentLoaded', async function () {
+        window.addEventListener('load', async function () {
             try {
-                const clerk = await Clerk.load({ 
-                    frontendApi: CLERK_FRONTEND_API,
-                    domain: CLERK_DOMAIN
+                await Clerk.load({
+                    ui: { ClerkUI: window.__internal_ClerkUICtor },
                 });
-                if (clerk.user) {
+
+                if (Clerk.isSignedIn) {
                     window.location.href = 'tracking.html';
                     return;
                 }
+
+                const signInDiv = document.getElementById('sign-in');
+                if (signInDiv) {
+                    Clerk.mountSignIn(signInDiv);
+                }
             } catch (error) {
                 console.error('Clerk load failed:', error);
-            }
-            const signInBtn = document.getElementById('clerk-sign-in-btn');
-            if (signInBtn) {
-                signInBtn.addEventListener('click', startClerkSignIn);
+                const panel = document.getElementById('login-panel');
+                if (panel) {
+                    panel.innerHTML = '<p class="tracker-help-text">Unable to load Clerk sign-in. Please refresh the page.</p>';
+                }
             }
         });
     </script>
-    <script src="js/main.js"></script>
 </body>
 </html>
