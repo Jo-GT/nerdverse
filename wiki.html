@@ -1,4 +1,14 @@
 <!DOCTYPE html>
+<!--
+  wiki.html — J.A.R.V.I.S. Wiki Assistant
+  ─────────────────────────────────────────────────────────────
+  An AI chat page for general comic knowledge questions.
+  The page identifier "wiki" is used by main.js to:
+    • Look up SYSTEM_PROMPTS['wiki'] (the wiki-assistant personality)
+    • Inject Wikipedia / Marvel Fandom / DC Fandom context into prompts
+    • Inject live DuckDuckGo + Comic Vine context for up-to-date answers
+  TTS (text-to-speech) controls let users hear AI responses read aloud.
+-->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -10,7 +20,7 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <!-- Navigation -->
+    <!-- Navigation — see index.html for full nav notes -->
     <nav>
         <div class="logo" onclick="navigateTo('index')">NerdVerse</div>
         <ul class="nav-links" id="nav-links">
@@ -32,13 +42,17 @@
 
     <!-- Main Content -->
     <main>
+        <!-- chat-container is a flex column — header, TTS bar, quick prompts,
+             scrollable messages, input bar, and image upload all stack vertically -->
         <div class="chat-container">
             <div class="chat-header">
                 <h2>📚 J.A.R.V.I.S. Wiki Assistant</h2>
                 <p>Ask me anything about comics!</p>
             </div>
 
-            <!-- TTS Controls -->
+            <!-- TTS Controls — toggle, voice dropdown, Speak/Mute buttons.
+                 The toggle checkbox state is read by main.js to decide whether
+                 to call window.speechSynthesis after each AI response. -->
             <div class="tts-controls">
                 <label class="tts-toggle">
                     <input type="checkbox" id="wiki-tts-enabled">
@@ -52,7 +66,8 @@
                 <button class="speaker-btn mute-btn" id="wiki-mute-btn" title="Mute voice output">Mute</button>
             </div>
             
-            <!-- Quick Prompts -->
+            <!-- Quick Prompts — preset question chips that call setQuickPrompt('wiki', '...')
+                 which fills the input and immediately sends the message -->
             <div class="quick-prompts">
                 <button class="quick-prompt" onclick="setQuickPrompt('wiki', 'Who is Spider-Man?')">Who is Spider-Man?</button>
                 <button class="quick-prompt" onclick="setQuickPrompt('wiki', 'Tell me about the Infinity Gauntlet')">Infinity Gauntlet</button>
@@ -68,7 +83,8 @@
                 </div>
             </div>
             
-            <!-- Chat Input -->
+            <!-- Chat Input — pill-shaped row with text field + Send button.
+                 main.js binds the Send button and Enter key to sendMessage('wiki') -->
             <div class="chat-input">
                 <input type="text" id="wiki-input" placeholder="Ask about a character, event, or storyline...">
                 <button id="wiki-send">Send</button>

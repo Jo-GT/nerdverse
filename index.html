@@ -1,16 +1,31 @@
 <!DOCTYPE html>
+<!--
+  index.html — NerdVerse Homepage
+  ─────────────────────────────────────────────────────────────
+  This is the landing page. It contains:
+    • The fixed navigation bar (shared across all pages)
+    • A full-viewport hero section with floating character images
+    • Three assistant-card tiles linking to Marvel, DCU, and Comics
+  No AI chat on this page — it's purely navigational.
+-->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NerdVerse - AI Comic Assistant</title>
+    <!-- Preconnect speeds up Google Fonts by opening the TCP connection early -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Bangers = comic-book display font for headings; Nunito = body text -->
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <!-- Navigation -->
+    <!-- Navigation — fixed top bar shared across every page.
+         data-page attributes are read by setActiveNavLink() in main.js
+         to highlight the current page link.
+         #nav-auth-li starts as a "Login" link; loadClerkAndUpdateNav()
+         in main.js replaces it with the user avatar + name when signed in. -->
     <nav>
         <div class="logo" onclick="navigateTo('index')">NerdVerse</div>
         <ul class="nav-links" id="nav-links">
@@ -21,8 +36,10 @@
             <li><a href="dcu.html" data-page="dcu">DCU</a></li>
             <li><a href="comics.html" data-page="comics">Comics</a></li>
             <li><a href="tracking.html" data-page="tracking">Tracker</a></li>
+            <!-- Auth item: shows Login by default; JS swaps to avatar + Sign Out when authenticated -->
             <li id="nav-auth-li"><a href="login.html" class="nav-login-link" data-page="login">Login</a></li>
         </ul>
+        <!-- Hamburger button — only visible on mobile; toggleMobileMenu() shows/hides nav-links -->
         <div class="mobile-menu" onclick="toggleMobileMenu()">
             <span></span>
             <span></span>
@@ -32,9 +49,11 @@
 
     <!-- Main Content -->
     <main>
-        <!-- Hero Section -->
+        <!-- Hero Section — full-viewport splash with animated background glows
+             and five floating character images that drift independently -->
         <section class="hero">
-            <!-- Floating Animated Images -->
+            <!-- Floating character images — each has its own CSS animation class
+                 (floating-img-1 through 5) so they move at different speeds -->
             <div class="floating-images">
                 <img src="images/batman.png" alt="Batman" class="floating-img floating-img-1">
                 <img src="images/spiderman.png" alt="Spider-Man" class="floating-img floating-img-2">
@@ -44,11 +63,13 @@
             </div>
             <h1>NerdVerse</h1>
             <p class="tagline">Your AI-powered companion powered by <span>J.A.R.V.I.S.</span> for <span>comic recommendations</span>, <span>wikis</span>, and <span>cinematic universes</span></p>
+            <!-- Primary CTAs — navigateTo() is defined in main.js and changes window.location -->
             <div class="hero-buttons">
                 <button class="btn btn-primary" onclick="navigateTo('marvel')">⚡ Marvel Universe</button>
                 <button class="btn btn-secondary" onclick="navigateTo('dcu')">🦇 DCU Timeline</button>
                 <button class="btn btn-outline" onclick="navigateTo('comics')">📚 Popular Comics</button>
             </div>
+            <!-- Stat tiles — purely decorative icons showing key feature highlights -->
             <div class="hero-stats">
                 <div class="stat">
                     <span class="stat-number"><img src="icons/jarvis.png" width="100" height="100"></span>
@@ -65,7 +86,8 @@
             </div>
         </section>
 
-        <!-- Assistant Cards -->
+        <!-- Assistant Cards — three feature tiles linking to the main sections.
+             onclick uses navigateTo() so the same navigation logic as the nav bar applies. -->
         <div class="assistant-grid">
             <div class="assistant-card" onclick="navigateTo('marvel')">
                 <div class="assistant-icon"><img src="icons/bigger icons/marvel.png"></div>
@@ -93,6 +115,7 @@
         <p>NerdVerse - Powered by <a href="https://ollama.com" target="_blank">Ollama</a></p>
     </footer>
 
+    <!-- main.js handles navigation, Clerk auth, chat, tracker, and all AI calls -->
     <script src="js/main.js"></script>
 </body>
 </html>

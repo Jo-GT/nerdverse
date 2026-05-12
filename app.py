@@ -37,27 +37,27 @@ class ComicHelperHandler(http.server.SimpleHTTPRequestHandler):
         super().__init__(*args, directory=DIRECTORY, **kwargs)
     
     def do_GET(self):
-        """Handle GET requests including API endpoints"""
+        """Route GET requests to API handlers or fall through to static file serving."""
         parsed_path = urllib.parse.urlparse(self.path)
         path = parsed_path.path
-        
-        # API Endpoints
+
+        # API route table — each handler reads query params and returns JSON
         if path == '/api/comics':
-            self.handle_comics_api()
+            self.handle_comics_api()        # Comic Vine search / mock data
         elif path == '/api/ollama-status':
-            self.handle_ollama_status()
+            self.handle_ollama_status()     # Is Ollama running?
         elif path == '/api/comic-vine-status':
-            self.handle_comic_vine_status()
+            self.handle_comic_vine_status() # Is Comic Vine reachable?
         elif path == '/api/wiki':
-            self.handle_wiki_api()
+            self.handle_wiki_api()          # Fandom / Wikipedia summary
         elif path == '/api/search':
-            self.handle_search_api()
+            self.handle_search_api()        # DuckDuckGo live search snippet
         elif path == '/api/chat':
-            self.handle_chat_api()
+            self.handle_chat_api()          # GET-based chat (legacy)
         elif path == '/api/recommend':
-            self.handle_recommend_api()
+            self.handle_recommend_api()     # Preferences-based recommendation
         else:
-            # Serve static files
+            # Serve static files (HTML, CSS, JS, images)
             super().do_GET()
     
     def do_POST(self):
@@ -205,26 +205,54 @@ class ComicHelperHandler(http.server.SimpleHTTPRequestHandler):
             })
     
     def handle_jarvis_comic_chat(self):
-        """Handle Jarvis comic chat requests"""
+        """Handle Jarvis comic chat — enriches context with live Comic Vine data for the selected comic"""
         content_length = int(self.headers.get('Content-Length', 0))
         post_data = self.rfile.read(content_length).decode('utf-8')
         data = json.loads(post_data)
-        
+
         comic = data.get('comic', {})
         message = data.get('message', '')
         history = data.get('history', [])
-        
-        # Build context about the comic
-        comic_context = f"""You are discussing the comic "{comic.get('title', 'Unknown')}" 
+
+        # Start with the static data sent from the JS comics database
+        comic_context = f"""You are discussing the comic "{comic.get('title', 'Unknown')}"
         - Issue: {comic.get('issue', 'N/A')}
         - Year: {comic.get('year', 'N/A')}
         - Writer: {comic.get('writer', 'Unknown')}
         - Artist: {comic.get('artist', 'Unknown')}
         - Characters: {', '.join(comic.get('characters', []))}
         - Description: {comic.get('description', 'N/A')}
-        
+
         Provide helpful, informative responses about this comic. Be friendly and enthusiastic."""
-        
+
+        # Fetch live Comic Vine data for this comic title so Jarvis has up-to-date
+        # issue details, characters, and creators rather than just the static JS database entry
+        try:
+            title = comic.get('title', '')
+            if title:
+                cv_results = search_issues(title, limit=3)
+                if cv_results:
+                    top = cv_results[0]
+                    cv_chars = ', '.join([c['name'] for c in top.get('character_credits', [])[:8]])
+                    cv_creators = ', '.join([c['name'] for c in top.get('person_credits', [])[:5]])
+                    cv_desc = top.get('description', '') or ''
+                    # Strip HTML tags from Comic Vine description
+                    import re
+                    cv_desc = re.sub(r'<[^>]+>', '', cv_desc)[:600]
+                    comic_context += f"""
+
+Comic Vine live data for "{title}":
+- Page count: {top.get('page_count', 'unknown')}
+- Cover date: {top.get('cover_date', 'unknown')}
+- Characters (Comic Vine): {cv_chars or 'not listed'}
+- Creators (Comic Vine): {cv_creators or 'not listed'}
+- Description (Comic Vine): {cv_desc or 'not available'}
+
+Use this live data to give more accurate and detailed answers."""
+        except Exception:
+            # Comic Vine unavailable — static context is still sufficient
+            pass
+
         # Check if Ollama is available
         status = check_ollama_status()
         if status['available']:

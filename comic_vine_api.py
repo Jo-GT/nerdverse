@@ -11,10 +11,11 @@ import urllib.parse
 import urllib.error
 
 # Comic Vine API Configuration
+# API key is read from env var first so it can be rotated without code changes
 COMIC_VINE_API_KEY = os.environ.get('COMIC_VINE_API_KEY', '97d02081df7467dfa454642d9ceade798611cbdf')
 COMIC_VINE_BASE_URL = 'https://comicvine.gamespot.com/api'
 
-# Track API availability
+# Cached availability flag — set on first real request so we don't hit the network at import time
 _api_available = None
 
 
@@ -131,16 +132,19 @@ def get_issue_price(issue_data):
 
 
 def format_comic_data(issue):
-    """Format comic issue data for display"""
+    """Normalise a raw Comic Vine issue dict into the flat shape the frontend expects.
+    'title' falls back to the volume name when the issue itself has no name (common for
+    numbered issues that Comic Vine stores without a separate issue title).
+    'page_count' is passed through so the tracker can show exact reading progress."""
     image = get_issue_image(issue)
-    
+
     return {
         'id': issue.get('id'),
         'title': issue.get('name', issue.get('volume', {}).get('name', 'Unknown')),
         'description': issue.get('description', 'No description available.'),
         'image': image,
         'price': issue.get('cover_date', 'N/A'),
-        'page_count': issue.get('page_count', 0),
+        'page_count': issue.get('page_count', 0),  # used by tracker for page-by-page progress
         'issue_number': issue.get('issue_number', 0),
         'series': issue.get('volume', {}).get('name', ''),
         'release_date': issue.get('cover_date', ''),
@@ -152,7 +156,8 @@ def format_comic_data(issue):
     }
 
 
-# Mock data for when Comic Vine API is not reachable
+# Mock data shown when Comic Vine API is unreachable (no key, rate-limited, or offline)
+# Keeps the UI functional so pages don't appear broken during development
 MOCK_COMICS = [
     {
         'id': 1,

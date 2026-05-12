@@ -1,22 +1,38 @@
 /**
- * ComicHelper - Main JavaScript
- * Handles all AI interactions with Ollama
+ * NerdVerse — Main JavaScript
+ *
+ * Sections in this file (in order):
+ *  1. Configuration constants
+ *  2. Startup — model check, navigation, Clerk auth
+ *  3. Image attachment helpers
+ *  4. Navigation & Clerk auth
+ *  5. Tracker — add / load / save / display / progress
+ *  6. Comic Vine search & image identification
+ *  7. Chat & AI response pipeline
+ *  8. Context helpers (wiki, internet, Comic Vine)
+ *  9. Recommendations page
+ * 10. Utility functions
  */
 
-// Configuration
+// ─── 1. Configuration ─────────────────────────────────────────────────────────
+// Ollama runs locally; both the text model (mistral) and vision model (llava) are
+// loaded on demand — llava is only used when the user attaches a cover image.
 const OLLAMA_URL = 'http://localhost:11434/api/generate';
 const DEFAULT_MODEL = 'mistral';
-const VISION_MODEL = 'llava'; // Vision-capable model for image processing
+const VISION_MODEL = 'llava'; // requires `ollama pull llava` to be run first
 const IMAGE_ATTACHMENT_NOTE = 'An image attachment is included with the user request. Use it as supplementary context for the comic question.';
+// Clerk auth keys — tied to the working-cowbird-13 Clerk instance
 const CLERK_PUBLISHABLE_KEY = 'pk_test_d29ya2luZy1jb3diaXJkLTEzLmNsZXJrLmFjY291bnRzLmRldiQ';
 const CLERK_DOMAIN = 'working-cowbird-13.clerk.accounts.dev';
 
-// Available models cache
+// ─── 2. Runtime state ─────────────────────────────────────────────────────────
+// availableModels is populated at startup; functions check it before deciding
+// which Ollama model to use (text vs vision). Fallback to [DEFAULT_MODEL] ensures
+// the UI still works even when Ollama is offline.
 let availableModels = [];
 let clerkClient = null;
 let clerkUserId = null;
 
-// Check available models on startup
 async function checkAvailableModels() {
     try {
         const response = await fetch('http://localhost:11434/api/tags');
@@ -26,7 +42,8 @@ async function checkAvailableModels() {
         }
     } catch (error) {
         console.warn('Could not check available Ollama models:', error);
-        availableModels = [DEFAULT_MODEL]; // Fallback
+        // Fallback keeps DEFAULT_MODEL in the list so later checks don't skip AI entirely
+        availableModels = [DEFAULT_MODEL];
     }
 }
 
@@ -660,6 +677,9 @@ function addTrackedComicFromSearch(index) {
         image: comic.image || comic.image?.medium_url || '',
         release_date: comic.release_date || comic.cover_date || '',
         progress: 0,
+        // page_count comes from Comic Vine API; current_page lets users track exactly where they are
+        page_count: comic.page_count || 0,
+        current_page: 0,
         characters: comic.character_credits || [],
         creators: comic.person_credits || []
     };
@@ -717,12 +737,23 @@ function displayTrackerCards() {
                     <div class="tracker-card-meta">${escapeHtml(comic.series)} ${escapeHtml(issue)}</div>
                     <div class="tracker-card-meta">${escapeHtml(comic.description.slice(0, 110))}...</div>
                     <div class="tracker-card-progress">
-                        <label>Progress: ${comic.progress}%</label>
+                        ${comic.page_count > 0
+                            // When Comic Vine supplied a real page count, show an exact page input
+                            ? `<label>Page <input type="number" class="tracker-page-input" min="0" max="${comic.page_count}" value="${comic.current_page || 0}" onchange="updateComicPage(${index}, this.value)"> of ${comic.page_count} &nbsp;(${comic.progress}%)</label>`
+                            // Fallback: no page count available, keep the simple percentage label
+                            : `<label>Progress: ${comic.progress}%</label>`
+                        }
                         <div class="progress-track"><div class="progress-fill" style="width: ${comic.progress}%"></div></div>
                     </div>
                     <div class="tracker-card-actions">
-                        <button class="btn btn-secondary" onclick="updateComicProgress(${index}, -10)">-10%</button>
-                        <button class="btn btn-primary" onclick="updateComicProgress(${index}, 10)">+10%</button>
+                        ${comic.page_count > 0
+                            // Page-count mode: jump buttons move by whole pages (10% of total)
+                            ? `<button class="btn btn-secondary" onclick="updateComicPage(${index}, Math.max(0, (${comic.current_page || 0}) - Math.ceil(${comic.page_count} * 0.1)))">-10%</button>
+                               <button class="btn btn-primary" onclick="updateComicPage(${index}, Math.min(${comic.page_count}, (${comic.current_page || 0}) + Math.ceil(${comic.page_count} * 0.1)))">+10%</button>`
+                            // Fallback: plain percentage buttons
+                            : `<button class="btn btn-secondary" onclick="updateComicProgress(${index}, -10)">-10%</button>
+                               <button class="btn btn-primary" onclick="updateComicProgress(${index}, 10)">+10%</button>`
+                        }
                         <button class="btn btn-secondary" onclick="openJarvisForComic(${index})">Discuss with Jarvis</button>
                         <button class="btn btn-secondary" onclick="removeTrackedComic(${index})">Remove</button>
                     </div>
@@ -735,6 +766,16 @@ function displayTrackerCards() {
 function updateComicProgress(index, delta) {
     if (!trackedComics[index]) return;
     trackedComics[index].progress = Math.min(100, Math.max(0, trackedComics[index].progress + delta));
+    saveTrackedComics();
+    displayTrackerCards();
+}
+
+// Updates reading position when page_count is known; recalculates % from actual pages
+function updateComicPage(index, page) {
+    const comic = trackedComics[index];
+    if (!comic || !comic.page_count) return;
+    comic.current_page = Math.min(comic.page_count, Math.max(0, parseInt(page) || 0));
+    comic.progress = Math.round((comic.current_page / comic.page_count) * 100);
     saveTrackedComics();
     displayTrackerCards();
 }
@@ -762,9 +803,12 @@ async function identifyComicFromImage(file) {
         const imageData = await getImageAttachment(file);
         const visionModelAvailable = availableModels.includes(VISION_MODEL);
 
+        // Vision prompt: tells LLaVA to read actual text from the cover rather than guess visually.
+        // Being explicit about what to look for (title size, issue number format, publisher logo position)
+        // dramatically reduces hallucinated results.
         const aiPrompt = visionModelAvailable
-            ? `You are a comic book expert. A user uploaded a comic book cover image. Identify the comic title, publisher, issue number, series, and any distinctive visual details. Return only valid JSON with keys: title, issue, publisher, series, description.`
-            : `You are a comic book expert. The user attached an image of a comic cover, but the app cannot analyze it directly. Describe how to identify this comic from the cover and suggest the best search query using the title, issue number, and publisher. Return only valid JSON with keys: title, issue, publisher, series, description, query.`;
+            ? `You are an expert comic book scanner. Look VERY carefully at this comic book cover image. Read ALL visible text on the cover: the title (usually the largest text), issue number (look for "#XX", "ISSUE XX", or a small number near the top or bottom), publisher name or logo (Marvel, DC, Image, Dark Horse, IDW, BOOM!, etc.), and any series subtitle. Do NOT guess — only report what you can actually read from the image. If you are unsure of a value, return an empty string for that key. Return ONLY a valid JSON object with these exact keys: title, issue, publisher, series, description. Example: {"title":"Batman","issue":"50","publisher":"DC","series":"Batman (2016)","description":"Batman standing on a rooftop"}`
+            : `You are a comic book expert. The user attached an image of a comic cover, but the app cannot analyze it directly. Based on common knowledge, suggest the best search query for finding this comic using a likely title, issue number, and publisher. Return only valid JSON with keys: title, issue, publisher, series, description, query.`;
 
         const requestBody = {
             model: visionModelAvailable ? VISION_MODEL : DEFAULT_MODEL,
@@ -793,30 +837,52 @@ async function identifyComicFromImage(file) {
         let suggestedPublisher = (parsed.publisher || '').trim();
         const fallbackQuery = (parsed.query || '').trim();
 
+        // Regex fallbacks in case the model returned plain text instead of JSON
         if (!suggestedTitle) {
             const titleMatch = aiResponse.match(/Title:\s*(.+)/i);
             if (titleMatch) suggestedTitle = titleMatch[1].trim();
         }
-
         if (!suggestedIssue) {
             const issueMatch = aiResponse.match(/Issue:\s*(.+)/i);
             if (issueMatch) suggestedIssue = issueMatch[1].trim();
         }
 
-        const searchQueryParts = [suggestedTitle, suggestedIssue, suggestedPublisher].filter(Boolean);
-        const searchQuery = searchQueryParts.length ? searchQueryParts.join(' ') : fallbackQuery;
-
-        if (!searchQuery) {
+        if (!suggestedTitle && !fallbackQuery) {
             resultsContainer.innerHTML = `<p class="tracker-help-text">The cover AI could not identify a usable search query. Try a clearer image or search manually.</p>`;
             return;
         }
 
-        const searchResponse = await fetch(`/api/comics?q=${encodeURIComponent(searchQuery)}`);
-        if (!searchResponse.ok) throw new Error('Comic Vine search failed');
+        // Show what the AI detected so the user can judge accuracy before results load
+        const identifiedParts = [
+            suggestedTitle,
+            suggestedIssue ? `#${suggestedIssue}` : '',
+            suggestedPublisher ? `(${suggestedPublisher})` : ''
+        ].filter(Boolean);
+        if (identifiedParts.length) {
+            resultsContainer.innerHTML = `<p class="tracker-ai-banner">🤖 AI identified: <strong>${escapeHtml(identifiedParts.join(' '))}</strong> — searching Comic Vine...</p>`;
+        }
 
-        const searchResults = await searchResponse.json();
-        if (!Array.isArray(searchResults) || searchResults.length === 0) {
-            resultsContainer.innerHTML = `<p class="tracker-help-text">No comics were found using "${escapeHtml(searchQuery)}". Try a different image or search manually.</p>`;
+        // Progressive search: try increasingly broad queries so a specific issue match is preferred
+        // but we still get results if only the title was recognised
+        const searchAttempts = [
+            suggestedTitle && suggestedIssue ? `${suggestedTitle} ${suggestedIssue}` : null,
+            suggestedTitle && suggestedPublisher ? `${suggestedTitle} ${suggestedPublisher}` : null,
+            suggestedTitle || fallbackQuery
+        ].filter(Boolean);
+
+        let searchResults = null;
+        for (const query of searchAttempts) {
+            const searchResponse = await fetch(`/api/comics?q=${encodeURIComponent(query)}`);
+            if (!searchResponse.ok) continue;
+            const results = await searchResponse.json();
+            if (Array.isArray(results) && results.length > 0) {
+                searchResults = results;
+                break;
+            }
+        }
+
+        if (!searchResults || searchResults.length === 0) {
+            resultsContainer.innerHTML = `<p class="tracker-help-text">No comics found for "${escapeHtml(suggestedTitle || fallbackQuery)}". Try a different image or search manually.</p>`;
             return;
         }
 
@@ -949,9 +1015,14 @@ function hideTypingIndicator(page) {
     }
 }
 
-/**
- * Fetch external wiki context from the backend
- */
+// ─── 8. Context helpers ───────────────────────────────────────────────────────
+// These three helpers fetch supplementary context from the backend and return it
+// as plain objects. getAIResponse() appends the results to the Ollama prompt so
+// answers reflect current wiki/internet/Comic Vine data rather than the model's
+// training cutoff. Each helper silently returns null on any network error so a
+// slow external service never breaks the chat UI.
+
+// Calls the backend /api/wiki route which tries Marvel Fandom → DC Fandom → Wikipedia
 async function fetchWikiContext(query) {
     try {
         const response = await fetch(`/api/wiki?q=${encodeURIComponent(query)}`);
@@ -962,9 +1033,7 @@ async function fetchWikiContext(query) {
     }
 }
 
-/**
- * Fetch live internet search context from the backend
- */
+// Calls the backend /api/search route which uses DuckDuckGo for live snippets
 async function fetchInternetContext(query) {
     try {
         const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
@@ -975,9 +1044,8 @@ async function fetchInternetContext(query) {
     }
 }
 
-/**
- * Fetch Comic Vine search context from the backend
- */
+// Calls the backend /api/comics route and formats the top 5 results as a text block
+// so the AI can cite specific issues, series, and creators in its answer
 async function fetchComicVineContext(query) {
     try {
         const response = await fetch(`/api/comics?q=${encodeURIComponent(query)}`);
@@ -1033,14 +1101,15 @@ async function getAIResponse(page, message, attachment = null) {
         }
     }
 
-    if (page === 'wiki' || page === 'guides' || page === 'personalized') {
+    // Internet and Comic Vine context added for all major chat pages so answers reflect current info
+    if (page === 'wiki' || page === 'guides' || page === 'personalized' || page === 'marvel' || page === 'dcu') {
         const internetContext = await fetchInternetContext(message);
         if (internetContext && internetContext.summary) {
             prompt += `\n\nAlso use this live internet search context from ${internetContext.source} if it helps answer the question:\n\n${internetContext.summary}`;
         }
     }
 
-    if (page === 'wiki' || page === 'guides' || page === 'personalized') {
+    if (page === 'wiki' || page === 'guides' || page === 'personalized' || page === 'marvel' || page === 'dcu') {
         const comicVineContext = await fetchComicVineContext(message);
         if (comicVineContext && comicVineContext.summary) {
             prompt += `\n\nAlso use the following Comic Vine data to answer questions about comics, characters, series, or issues. Cite this information when relevant:\n\n${comicVineContext.summary}`;

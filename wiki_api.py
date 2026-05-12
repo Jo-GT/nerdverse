@@ -8,6 +8,10 @@ import json
 import urllib.request
 import urllib.parse
 
+# Wikipedia API returns plain-text page summaries for general comic lore
+# Fandom wikis (Marvel/DC) are tried first when keywords match a franchise,
+# as they have more specific character and storyline detail
+# DuckDuckGo is the final fallback for real-time/current info not on wikis
 USER_AGENT = 'ComicHelper/1.0'
 WIKIPEDIA_SEARCH_URL = 'https://en.wikipedia.org/w/api.php'
 WIKIPEDIA_SUMMARY_URL = 'https://en.wikipedia.org/api/rest_v1/page/summary'
@@ -98,6 +102,9 @@ def search_duckduckgo(query):
 
 
 def get_internet_context(query):
+    """Fetch a short text summary for a query using DuckDuckGo's instant-answer API.
+    Falls back to RelatedTopics snippets when the top AbstractText is empty
+    (common for niche comic queries that don't have a direct instant answer)."""
     query = query.strip()
     if not query:
         return {
@@ -121,6 +128,7 @@ def get_internet_context(query):
     summary = result.get('AbstractText', '').strip()
     source_url = result.get('AbstractURL', '')
 
+    # AbstractText is empty for many queries — dig into RelatedTopics for a snippet
     if not summary:
         related = result.get('RelatedTopics', [])
         for item in related[:4]:
@@ -145,6 +153,10 @@ def get_internet_context(query):
 
 
 def get_wiki_context(query):
+    """Return the best available wiki summary for a query.
+    Source priority: Marvel Fandom → DC Fandom → Wikipedia → DuckDuckGo.
+    Fandom wikis are tried first for franchise-specific queries because they contain
+    more detailed character, arc, and issue information than Wikipedia."""
     query = query.strip()
     if not query:
         return {
@@ -157,12 +169,14 @@ def get_wiki_context(query):
 
     q_lower = query.lower()
     preferred_sources = []
+    # Route Marvel-keyword queries to Marvel Fandom first
     if any(keyword in q_lower for keyword in ['marvel', 'spider-man', 'iron man', 'x-men', 'avengers', 'wolverine', 'thor', 'loki', 'black panther', 'hulk', 'captain america']):
         preferred_sources.append('marvel')
+    # Route DC-keyword queries to DC Fandom first
     if any(keyword in q_lower for keyword in ['dc', 'batman', 'superman', 'wonder woman', 'justice league', 'flash', 'aquaman', 'joker', 'harley quinn']):
         preferred_sources.append('dc')
 
-    # Always include Wikipedia as a fallback.
+    # Always include Wikipedia as a final fallback
     preferred_sources.append('wikipedia')
 
     for source in preferred_sources:

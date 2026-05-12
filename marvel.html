@@ -1,4 +1,22 @@
 <!DOCTYPE html>
+<!--
+  marvel.html — MCU Interactive Timeline + J.A.R.V.I.S. Chat
+  ─────────────────────────────────────────────────────────────
+  Two main areas on this page:
+    1. MCU Timeline — cards for every film/series in phase order.
+       Clicking a card expands it to show director, runtime, box office.
+       Phase filter buttons call populateTimeline(phase) which renders
+       only matching items from the inline mcuTimeline data array.
+
+    2. AI Chat — uses getAIResponse('marvel', message) from main.js
+       so answers use SYSTEM_PROMPTS['marvel'] + DuckDuckGo + Comic Vine
+       context for up-to-date MCU information.
+
+  Note: this page has its own inline <style> block (Marvel brand colours,
+  Orbitron/Rajdhani fonts) that overrides the global styles.css in places.
+  The page also has its own inline TTS implementation (separate from the
+  shared wiki/guides TTS in main.js) because the chat markup is different.
+-->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -48,7 +66,7 @@
             text-transform: uppercase;
         }
 
-        /* Phase Filter */
+        /* Phase Filter — button row above the timeline for filtering by MCU phase */
         .phase-filter {
             display: flex;
             justify-content: center;
@@ -76,7 +94,9 @@
             box-shadow: 0 0 20px rgba(236, 29, 36, 0.5);
         }
 
-        /* Timeline */
+        /* Timeline — alternating left/right layout using odd/even nth-child selectors.
+           The vertical line is drawn by .timeline::before as an absolutely-positioned
+           gradient bar running full height down the centre. */
         .timeline {
             position: relative;
             padding: 2rem 0;
@@ -215,7 +235,9 @@
             font-weight: 500;
         }
 
-        /* AI Assistant Section */
+        /* AI Assistant Section — chat panel below the timeline.
+           Uses getAIResponse('marvel', ...) which now also injects
+           DuckDuckGo + Comic Vine context for up-to-date answers. */
         .ai-assistant-section {
             margin-top: 4rem;
             padding: 2rem;
@@ -585,7 +607,9 @@
 
     <script src="js/main.js"></script>
     <script>
-        // MCU Timeline Data
+        // mcuTimeline — full hardcoded list of MCU films and series.
+        // phase: used by the filter buttons; order: used for sorting.
+        // details: shown in the expanded card (director/runtime/box office or episodes/network)
         const mcuTimeline = [
             { phase: 1, year: 2008, title: "Iron Man", type: "Film", order: 1, description: "Tony Stark builds a revolutionary suit after being kidnapped.", details: { director: "Jon Favreau", runtime: "126 min", boxOffice: "$585M" }},
             { phase: 1, year: 2008, title: "The Incredible Hulk", type: "Film", order: 2, description: "Bruce Banner transforms into the Hulk while on the run.", details: { director: "Louis Leterrier", runtime: "112 min", boxOffice: "$265M" }},
@@ -635,7 +659,8 @@
             { phase: 6, year: 2027, title: "Avengers: Secret Wars", type: "Film", order: 46, description: "The multiverse collides.", details: { director: "Anthony Russo, Joe Russo", runtime: "TBD", boxOffice: "TBD" }}
         ];
 
-        // Populate timeline
+        // Renders timeline cards filtered by MCU phase.
+        // Called on page load and each time a phase button is clicked.
         function populateTimeline(phase = 'all') {
             const timeline = document.getElementById('timeline');
             timeline.innerHTML = '';

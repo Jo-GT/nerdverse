@@ -1,4 +1,14 @@
 <!DOCTYPE html>
+<!--
+  recommendations.html — Comic Recommendations (Filter-Based)
+  ─────────────────────────────────────────────────────────────
+  Structured recommendation page using dropdown filters and
+  genre tag toggles rather than free-text chat.
+  "Generate Recommendations" calls getRecommendations() in main.js
+  which posts preferences to /api/recommend — the backend searches
+  Comic Vine and optionally asks Ollama for an AI analysis blurb.
+  For free-text chat recommendations, see personalized.html instead.
+-->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -37,7 +47,10 @@
                 <p>Tell us what you like, and we'll suggest the perfect comics!</p>
             </div>
 
-            <!-- Filter Section -->
+            <!-- Filter Section — three dropdowns (hero, trope, movie/show) and
+                 genre tag chips. Selected genres get the .selected CSS class added
+                 by initialiseGenreTags() in main.js. All values are read by
+                 getRecommendations() when the button is clicked. -->
             <div class="filter-section">
                 <div class="filter-group">
                     <label for="hero-select">Favorite Hero/Character</label>
@@ -100,7 +113,9 @@
                 <button class="btn btn-outline" onclick="navigateTo('comics')" style="width: 100%;">Browse Popular Comics</button>
             </div>
 
-            <!-- Results -->
+            <!-- Results — empty div populated by getRecommendations() in main.js.
+                 Filled with comic cards from Comic Vine (or mock data) plus an
+                 optional AI analysis block when Ollama is running. -->
             <div id="recommendations-results"></div>
         </div>
     </main>

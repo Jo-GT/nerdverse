@@ -1,4 +1,23 @@
 <!DOCTYPE html>
+<!--
+  tracking.html — My Comic Tracker
+  ─────────────────────────────────────────────────────────────
+  Requires Clerk login — main.js checks Clerk.user and redirects
+  to login.html if no session is found.
+
+  Two-panel layout:
+    Left panel  — Comic Vine search input and cover image upload.
+                  Uploading an image runs identifyComicFromImage()
+                  which sends it to LLaVA (vision AI) and searches
+                  Comic Vine with a progressive query strategy.
+    Right panel — Search results with "Add to Tracker" buttons.
+
+  Below both panels — Saved Comics section showing tracked cards.
+  Each card shows cover, title, description, and either:
+    • Page X of N input  (when Comic Vine returned a page_count)
+    • ±10% buttons       (fallback when page count is unknown)
+  Progress is saved to localStorage keyed by Clerk user ID.
+-->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -10,6 +29,10 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+    <!-- Navigation — see index.html for full nav notes.
+         Clerk script is loaded explicitly below (and in login.html) because
+         tracking requires auth. Other pages inject it dynamically via
+         injectClerkScript() in main.js when a session check is needed. -->
     <nav>
         <div class="logo" onclick="navigateTo('index')">NerdVerse</div>
         <ul class="nav-links" id="nav-links">
@@ -29,6 +52,8 @@
         </div>
     </nav>
 
+    <!-- Main — tracker-page sets the full-page gradient background and
+         centres the content within a max-width container -->
     <main>
         <section class="tracker-page" id="tracking-page">
             <div class="tracker-hero">

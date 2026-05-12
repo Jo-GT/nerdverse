@@ -1,4 +1,17 @@
 <!DOCTYPE html>
+<!--
+  personalized.html — Personalized Picks Chat
+  ─────────────────────────────────────────────────────────────
+  Free-text AI chat where users describe exactly what they want
+  and get tailored recommendations. Unlike recommendations.html
+  (dropdown filters), this page accepts natural-language input.
+  Page identifier "personalized" in main.js gives it:
+    • SYSTEM_PROMPTS['personalized'] — asks follow-up questions
+      to understand preferences before recommending
+    • All three context sources: Wikipedia/Fandom, DuckDuckGo,
+      and Comic Vine injected into every prompt
+  Users can also attach a cover image to ask about a specific comic.
+-->
 <html lang="en">
 <head>
     <meta charset="UTF-8">

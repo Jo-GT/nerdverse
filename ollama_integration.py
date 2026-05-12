@@ -9,34 +9,35 @@ import urllib.request
 import urllib.parse
 import urllib.error
 
-# Ollama Configuration
+# Ollama Configuration — Ollama must be running locally via `ollama serve`
 OLLAMA_BASE_URL = 'http://localhost:11434'
 DEFAULT_MODEL = 'llama3.2:latest'
 
 def call_ollama(prompt, model=None, system_prompt=None):
-    """Send a prompt to Ollama and get the response"""
+    """Send a prompt to Ollama and return the text response, or an error string on failure."""
     if model is None:
         model = DEFAULT_MODEL
-    
+
     payload = {
         'model': model,
         'prompt': prompt,
-        'stream': False
+        'stream': False  # stream=False means we wait for the full response before returning
     }
-    
+
     if system_prompt:
         payload['system'] = system_prompt
-    
+
     url = f"{OLLAMA_BASE_URL}/api/generate"
-    
+
     try:
         data = json.dumps(payload).encode('utf-8')
         req = urllib.request.Request(
-            url, 
-            data=data, 
+            url,
+            data=data,
             headers={'Content-Type': 'application/json'}
         )
-        
+
+        # 60-second timeout: generation for longer prompts can take 20-40s on modest hardware
         with urllib.request.urlopen(req, timeout=60) as response:
             result = json.loads(response.read().decode('utf-8'))
             return result.get('response', '')
@@ -48,9 +49,10 @@ def call_ollama(prompt, model=None, system_prompt=None):
         return f"Error: {str(e)}"
 
 def check_ollama_status():
-    """Check if Ollama is running and available"""
+    """Check if Ollama is running by hitting /api/tags (the model list endpoint).
+    Uses a 5-second timeout — this is a quick health check, not a generation request."""
     url = f"{OLLAMA_BASE_URL}/api/tags"
-    
+
     try:
         with urllib.request.urlopen(url, timeout=5) as response:
             if response.status == 200:
@@ -62,7 +64,7 @@ def check_ollama_status():
                 }
     except:
         pass
-    
+
     return {'available': False, 'models': []}
 
 def analyse_preferences_with_ai(user_input, available_comics):

@@ -1,6 +1,42 @@
-/* ComicHelper - Main Stylesheet */
+/* =============================================================
+   NerdVerse — Main Stylesheet
+   Sections (in order):
+     1.  CSS Variables (colour palette & design tokens)
+     2.  Reset & base
+     3.  Dot-pattern background
+     4.  Typography
+     5.  Navigation (fixed top bar, logo, links, auth, mobile menu)
+     6.  Main content wrapper
+     7.  Hero section (homepage full-viewport splash)
+     8.  Floating hero images & keyframe animations
+     9.  Buttons (.btn, .btn-primary, .btn-secondary, .btn-outline)
+    10.  Image preview (chat & tracker file attachment display)
+    11.  Tracker page layout (search panel, results panel, summary)
+    12.  Tracker cards & progress bar
+    13.  Assistant cards grid (homepage feature tiles)
+    14.  Chat interface (messages, input bar, typing indicator)
+    15.  TTS (text-to-speech) controls
+    16.  Recommendations page (filter section, genre tags, results)
+    17.  Marvel / comic card styles
+    18.  Error message & footer
+    19.  Page title & back-button helpers
+    20.  Mobile responsive overrides (max-width: 768px / 960px)
+   ============================================================= */
 
-/* CSS Variables */
+/* ─── 1. CSS Variables ───────────────────────────────────────
+   These tokens are used everywhere — change a value here and
+   it updates across the whole site automatically.
+   --bg           deepest background (near-black navy)
+   --surface      card/panel background (slightly lighter)
+   --surface-elevated  raised card inside a panel
+   --primary      orange accent — buttons, active links, titles
+   --secondary    teal accent — AI messages, badges, shimmer
+   --accent       gold — used in logo text-shadow and highlights
+   --text-primary white
+   --text-secondary muted grey for metadata and labels
+   --border       subtle divider colour
+   --error        red for error states
+   ─────────────────────────────────────────────────────────── */
 :root {
     --bg: #0a0a0f;
     --surface: #14141f;
@@ -14,7 +50,12 @@
     --error: #ff4757;
 }
 
-/* Reset & Base */
+/* ─── 2. Reset & base ────────────────────────────────────────
+   Box-sizing border-box means padding and border are included
+   in an element's width — avoids unexpected overflow.
+   overflow-x: hidden on body prevents horizontal scrollbars
+   caused by full-width animations sliding in from off-screen.
+   ─────────────────────────────────────────────────────────── */
 * {
     margin: 0;
     padding: 0;
@@ -30,7 +71,11 @@ body {
     line-height: 1.6;
 }
 
-/* Dot Pattern Background */
+/* ─── 3. Dot-pattern background ──────────────────────────────
+   Uses a pseudo-element so the pattern sits behind all content
+   (z-index: -1). pointer-events: none means it never blocks
+   clicks. The radial-gradient creates a repeating dot grid.
+   ─────────────────────────────────────────────────────────── */
 body::before {
     content: '';
     position: fixed;
@@ -45,7 +90,11 @@ body::before {
     z-index: -1;
 }
 
-/* Typography */
+/* ─── 4. Typography ──────────────────────────────────────────
+   All headings use Bangers (the bold comic-book display font).
+   Body text uses Nunito (readable, rounded sans-serif).
+   Both fonts are loaded from Google Fonts in each HTML file.
+   ─────────────────────────────────────────────────────────── */
 h1, h2, h3, h4 {
     font-family: 'Bangers', cursive;
     letter-spacing: 1px;
@@ -66,7 +115,20 @@ a:hover {
     color: var(--primary);
 }
 
-/* Navigation */
+/* ─── 5. Navigation ──────────────────────────────────────────
+   The nav is position:fixed so it stays at the top during
+   scroll. backdrop-filter:blur gives a frosted-glass effect
+   over page content. z-index:1000 ensures it sits above
+   everything including modals and floating images.
+
+   Nav link underline animation: the ::after pseudo-element
+   starts at width:0 and expands to 100% on hover/active —
+   this creates the sliding orange underline effect.
+
+   Auth area (last <li>): shows "Login" link by default;
+   JS (loadClerkAndUpdateNav) swaps it for avatar + name
+   + Sign Out when a Clerk session is detected.
+   ─────────────────────────────────────────────────────────── */
 nav {
     position: fixed;
     top: 0;
@@ -205,13 +267,23 @@ nav {
     transition: 0.3s;
 }
 
-/* Main Content */
+/* ─── 6. Main content wrapper ────────────────────────────────
+   padding-top: 80px offsets the fixed nav height so page
+   content isn't hidden underneath it.
+   ─────────────────────────────────────────────────────────── */
 main {
     padding-top: 80px;
     min-height: calc(100vh - 80px);
 }
 
-/* Hero Section */
+/* ─── 7. Hero section ────────────────────────────────────────
+   Full-viewport splash used on the homepage.
+   ::before — pulsing orange radial glow in the centre.
+   ::after  — three soft colour washes (teal bottom-left,
+              gold top-right, orange centre) that slowly float.
+   Both pseudo-elements use pointer-events:none so they never
+   intercept clicks on the buttons below.
+   ─────────────────────────────────────────────────────────── */
 .hero {
     min-height: calc(100vh - 80px);
     display: flex;
@@ -250,7 +322,13 @@ main {
     animation: float 6s ease-in-out infinite;
 }
 
-/* Floating Hero Images */
+/* ─── 8. Floating hero images & keyframe animations ─────────
+   Five character images are absolutely positioned around the
+   hero and each has its own floatAroundN keyframe so they
+   drift independently — avoids them looking synchronised.
+   will-change: transform is a performance hint so the browser
+   can promote them to their own compositor layer.
+   ─────────────────────────────────────────────────────────── */
 .floating-images {
     position: absolute;
     top: 0;
@@ -491,7 +569,13 @@ main {
     }
 }
 
-/* Buttons */
+/* ─── 9. Buttons ─────────────────────────────────────────────
+   .btn          base — pill shape, flex row, consistent sizing
+   .btn-primary  orange gradient — main CTAs
+   .btn-secondary  teal gradient — secondary actions
+   .btn-outline  transparent with border — tertiary/ghost
+   .btn:disabled  fades to 50% opacity, disables pointer
+   ─────────────────────────────────────────────────────────── */
 .btn {
     padding: 1rem 2rem;
     border: none;
@@ -528,6 +612,12 @@ main {
     background: rgba(255, 255, 255, 0.12);
 }
 
+/* ─── 10. Image preview (file attachment display) ────────────
+   Shown below a file input after the user picks an image.
+   .image-preview-card  — thumbnail + filename + status text
+   .message-image       — when the image is echoed inside a chat message
+   .image-caption       — small italic label under the thumbnail
+   ─────────────────────────────────────────────────────────── */
 .image-preview,
 .tracker-search-results,
 .tracker-cards,
@@ -591,6 +681,15 @@ main {
     color: var(--text-secondary);
 }
 
+/* ─── 11. Tracker page layout ────────────────────────────────
+   .tracker-page       full-page wrapper with gradient background
+   .tracker-grid       two-column layout: search left, results right
+   .tracker-panel      individual glassmorphism card panels
+   .tracker-search-row input + button side-by-side row
+   .tracker-upload-row file input area for cover image identification
+   .tracker-results-panel  right panel that fills remaining height
+   .tracker-summary-panel  bottom section listing all saved comics
+   ─────────────────────────────────────────────────────────── */
 .tracker-page {
     max-width: 1400px;
     margin: 0 auto;
@@ -775,6 +874,52 @@ main {
     color: var(--text-secondary);
 }
 
+/* Banner shown after AI image analysis, confirms what LLaVA detected before results load */
+.tracker-ai-banner {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    background: rgba(0, 212, 255, 0.08);
+    border-left: 3px solid var(--primary);
+    border-radius: 4px;
+}
+.tracker-ai-banner strong {
+    color: var(--text-primary);
+}
+
+/* Inline page-number input inside tracker progress label */
+.tracker-page-input {
+    width: 55px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    padding: 0.15rem 0.35rem;
+    text-align: center;
+    margin: 0 0.35rem;
+}
+.tracker-page-input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* ─── 12. Tracker cards & progress bar ───────────────────────
+   .tracker-card / .tracker-search-card
+       Two-column grid: cover image (120px) | body text
+       .ai-suggested variant gets a teal border glow when the
+       card was identified by the AI cover scanner.
+
+   .progress-track    pill-shaped grey track
+   .progress-fill     gradient fill (teal → orange); width is
+                      set inline as a percentage via JS
+   .progress-fill::after  shimmer sweep animation overlay
+
+   .tracker-page-input  inline number input for exact page entry
+                        (shown instead of ±10% buttons when
+                        Comic Vine returned a page_count)
+   ─────────────────────────────────────────────────────────── */
 .tracker-card,
 .tracker-search-card {
     background: rgba(10, 10, 15, 0.95);
@@ -976,7 +1121,12 @@ main {
     cursor: not-allowed;
 }
 
-/* Assistant Cards Grid */
+/* ─── 13. Assistant cards grid (homepage feature tiles) ──────
+   Responsive auto-fill grid of feature cards on the homepage.
+   Each card has a ::before shimmer sweep that plays on hover.
+   The cubic-bezier on hover transform gives a slight overshoot
+   "bounce" feel rather than a linear scale.
+   ─────────────────────────────────────────────────────────── */
 .assistant-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -1067,7 +1217,16 @@ main {
     box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
 }
 
-/* Chat Interface */
+/* ─── 14. Chat interface ─────────────────────────────────────
+   .chat-container   column flex that fills the viewport height
+   .chat-messages    scrollable message history area
+   .message.user     orange pill aligned right
+   .message.ai       dark card aligned left with 🤖 badge
+   .typing-indicator three dots bouncing with staggered delays
+                     shown while Ollama is generating a response
+   .chat-input       pill-shaped input + send button row
+   .quick-prompts    preset question chips above the input
+   ─────────────────────────────────────────────────────────── */
 .chat-container {
     max-width: 900px;
     margin: 0 auto;
@@ -1244,6 +1403,13 @@ main {
     color: var(--secondary);
 }
 
+/* ─── 15. TTS (text-to-speech) controls ─────────────────────
+   Shown on Jarvis chat pages above the message list.
+   Four-column grid: [toggle switch] [voice dropdown] [speak] [mute]
+   The toggle uses a hidden checkbox + styled label so the
+   checkbox state drives the CSS (no JS needed for the visual).
+   On mobile (<860px) it collapses to a single column.
+   ─────────────────────────────────────────────────────────── */
 .tts-controls {
     display: grid;
     grid-template-columns: minmax(220px, 1fr) minmax(240px, 1.4fr) auto auto;
@@ -1368,7 +1534,13 @@ main {
     }
 }
 
-/* Recommendations Page */
+/* ─── 16. Recommendations page ───────────────────────────────
+   .recommendations-container  centred content wrapper
+   .filter-section  the panel with character/trope/genre inputs
+   .genre-tags      row of clickable tag pills; .selected
+                    highlights the active genres in teal
+   .results-grid    auto-fill card grid for recommendation results
+   ─────────────────────────────────────────────────────────── */
 .recommendations-container {
     max-width: 1000px;
     margin: 0 auto;
@@ -1515,7 +1687,14 @@ main {
     font-size: 0.875rem;
 }
 
-/* Marvel Card Styles */
+/* ─── 17. Marvel / comic card styles ────────────────────────
+   .marvel-card     richer card layout used on marvel.html and dcu.html
+                    with taller cover image (280px), series label,
+                    character tags, and optional .ai-reason block
+   .ai-reason       left-border teal quote shown when Ollama
+                    provided a personalised match explanation
+   .ai-badge        small inline "AI Suggested" chip
+   ─────────────────────────────────────────────────────────── */
 .marvel-card .comic-cover {
     height: 280px;
     background: linear-gradient(135deg, var(--surface-elevated), var(--border));
@@ -1617,7 +1796,10 @@ main {
     line-height: 1.6;
 }
 
-/* Error Message */
+/* ─── 18. Error message & footer ─────────────────────────────
+   .error-message  semi-transparent orange box for API failures
+   footer          simple centred credit line with top border
+   ─────────────────────────────────────────────────────────── */
 .error-message {
     background: rgba(255, 107, 53, 0.1);
     border: 1px solid var(--primary);
@@ -1637,7 +1819,11 @@ footer {
     margin-top: 2rem;
 }
 
-/* Page Title Section */
+/* ─── 19. Page title & back-button helpers ───────────────────
+   .page-title  shared banner used at the top of wiki, guides,
+               comics, marvel, dcu pages
+   .back-btn    clickable "← Back" link used inside detail views
+   ─────────────────────────────────────────────────────────── */
 .page-title {
     text-align: center;
     padding: 3rem 2rem 2rem;
@@ -1671,7 +1857,18 @@ footer {
     color: var(--primary);
 }
 
-/* Mobile Responsive */
+/* ─── 20. Mobile responsive overrides ───────────────────────
+   768px breakpoint:
+     - nav-links collapse behind the hamburger (.mobile-menu)
+     - hero text scales down
+     - assistant-grid becomes single column
+     - chat padding tightens
+     - nav-username-link hidden (only avatar shown in mobile nav)
+
+   960px breakpoint (tracker only):
+     - tracker-grid becomes single column
+     - tracker cards stack cover above body text
+   ─────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
     .nav-links {
         display: none;
