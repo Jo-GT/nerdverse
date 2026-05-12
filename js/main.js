@@ -8,9 +8,13 @@ const OLLAMA_URL = 'http://localhost:11434/api/generate';
 const DEFAULT_MODEL = 'mistral';
 const VISION_MODEL = 'llava'; // Vision-capable model for image processing
 const IMAGE_ATTACHMENT_NOTE = 'An image attachment is included with the user request. Use it as supplementary context for the comic question.';
+const CLERK_FRONTEND_API = 'pk_test_d29ya2luZy1jb3diaXJkLTEzLmNsZXJrLmFjY291bnRzLmRldiQ';
+const CLERK_DOMAIN = 'working-cowbird-13.clerk.accounts.dev';
 
 // Available models cache
 let availableModels = [];
+let clerkClient = null;
+let clerkUserId = null;
 
 // Check available models on startup
 async function checkAvailableModels() {
@@ -47,6 +51,50 @@ async function getImageAttachment(file) {
         data: base64Data,
         fullDataUrl: dataUrl
     };
+}
+
+async function loadClerkClient() {
+    if (clerkClient) {
+        return clerkClient;
+    }
+    if (!window.Clerk) {
+        throw new Error('Clerk library is not loaded');
+    }
+    clerkClient = await Clerk.load({ 
+        frontendApi: CLERK_FRONTEND_API,
+        domain: CLERK_DOMAIN
+    });
+    return clerkClient;
+}
+
+async function ensureAuthenticated() {
+    try {
+        const clerk = await loadClerkClient();
+        if (!clerk.user) {
+            window.location.href = 'login.html';
+            return false;
+        }
+        clerkUserId = clerk.user.id;
+        return true;
+    } catch (error) {
+        console.error('Clerk auth failed:', error);
+        window.location.href = 'login.html';
+        return false;
+    }
+}
+
+function getTrackedComicsStorageKey() {
+    return clerkUserId ? `nerdverseTrackedComics:${clerkUserId}` : 'nerdverseTrackedComics';
+}
+
+async function signOutClerk() {
+    try {
+        const clerk = await loadClerkClient();
+        await clerk.signOut();
+    } catch (error) {
+        console.warn('Clerk sign out failed:', error);
+    }
+    window.location.href = 'login.html';
 }
 
 function showTrackerImagePreview(file) {
@@ -219,9 +267,40 @@ function initialiseNavigation() {
         mobileMenu.addEventListener('click', toggleMobileMenu);
     }
 
+    addLoginIconToNav();
+
     // Set active nav link based on current page
     const currentPage = getCurrentPage();
     setActiveNavLink(currentPage);
+}
+
+function addLoginIconToNav() {
+    console.log('addLoginIconToNav called');
+    const nav = document.querySelector('nav');
+    console.log('nav element:', nav);
+    if (!nav || document.getElementById('nav-login-btn')) {
+        console.log('nav not found or button already exists');
+        return;
+    }
+
+    const loginBtn = document.createElement('button');
+    loginBtn.id = 'nav-login-btn';
+    loginBtn.type = 'button';
+    loginBtn.className = 'nav-login-btn';
+    loginBtn.innerHTML = '🔐 Login';
+    loginBtn.addEventListener('click', () => {
+        window.location.href = 'login.html';
+    });
+
+    const mobileMenu = nav.querySelector('.mobile-menu');
+    console.log('mobileMenu:', mobileMenu);
+    if (mobileMenu) {
+        nav.insertBefore(loginBtn, mobileMenu);
+        console.log('inserted before mobile menu');
+    } else {
+        nav.appendChild(loginBtn);
+        console.log('appended to nav');
+    }
 }
 
 /**
@@ -405,12 +484,20 @@ function initialiseGenreTags() {
     });
 }
 
-function initialiseTrackingPage() {
+async function initialiseTrackingPage() {
     if (!document.getElementById('tracking-page')) return;
+
+    const authed = await ensureAuthenticated();
+    if (!authed) return;
 
     const searchInput = document.getElementById('tracker-search-input');
     const searchBtn = document.getElementById('tracker-search-btn');
     const addBtn = document.getElementById('tracker-add-btn');
+    const signOutBtn = document.getElementById('clerk-sign-out-btn');
+
+    if (signOutBtn) {
+        signOutBtn.addEventListener('click', signOutClerk);
+    }
 
     if (searchInput) {
         searchInput.addEventListener('keypress', (e) => {
@@ -536,7 +623,7 @@ function addTrackedComic(comic) {
 }
 
 function loadTrackedComics() {
-    const saved = localStorage.getItem('nerdverseTrackedComics');
+    const saved = localStorage.getItem(getTrackedComicsStorageKey());
     if (saved) {
         try {
             trackedComics = JSON.parse(saved);
@@ -547,7 +634,7 @@ function loadTrackedComics() {
 }
 
 function saveTrackedComics() {
-    localStorage.setItem('nerdverseTrackedComics', JSON.stringify(trackedComics));
+    localStorage.setItem(getTrackedComicsStorageKey(), JSON.stringify(trackedComics));
 }
 
 function displayTrackerCards() {

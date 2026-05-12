@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | NerdVerse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav>
+        <div class="logo" onclick="navigateTo('index')">NerdVerse</div>
+        <ul class="nav-links" id="nav-links">
+            <li><a href="index.html" data-page="home">Home</a></li>
+            <li><a href="wiki.html" data-page="wiki">Wiki</a></li>
+            <li><a href="guides.html" data-page="guides">Guides</a></li>
+            <li><a href="marvel.html" data-page="marvel">Marvel</a></li>
+            <li><a href="dcu.html" data-page="dcu">DCU</a></li>
+            <li><a href="comics.html" data-page="comics">Comics</a></li>
+            <li><a href="tracking.html" data-page="tracking">Tracker</a></li>
+        </ul>
+        <div class="mobile-menu" onclick="toggleMobileMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </nav>
+
+    <main>
+        <section class="tracker-page login-page">
+            <div class="tracker-hero">
+                <div class="tracker-title">
+                    <h1>Welcome to NerdVerse</h1>
+                    <p>Sign in with Clerk to access your comic tracker and save your collection across devices.</p>
+                </div>
+                <div class="login-panel">
+                    <button id="clerk-sign-in-btn" class="btn btn-primary">Sign in with Clerk</button>
+                    <p class="tracker-help-text">If you already have a Clerk account, use it to sign in. Otherwise, create one during the Clerk flow.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>NerdVerse - Powered by <a href="https://ollama.com" target="_blank">Ollama</a></p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+    <script>
+        const CLERK_FRONTEND_API = 'pk_test_d29ya2luZy1jb3diaXJkLTEzLmNsZXJrLmFjY291bnRzLmRldiQ';
+        const CLERK_DOMAIN = 'working-cowbird-13.clerk.accounts.dev';
+
+        async function startClerkSignIn() {
+            const clerk = await Clerk.load({ frontendApi: CLERK_FRONTEND_API });
+            await clerk.openSignIn({ afterSignInUrl: 'tracking.html' });
+        }
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            try {
+                const clerk = await Clerk.load({ frontendApi: CLERK_FRONTEND_API });
+                if (clerk.user) {
+                    window.location.href = 'tracking.html';
+                    return;
+                }
+            } catch (error) {
+                console.error('Clerk load failed:', error);
+            }
+            const signInBtn = document.getElementById('clerk-sign-in-btn');
+            if (signInBtn) {
+                signInBtn.addEventListener('click', startClerkSignIn);
+            }
+        });
+    </script>
+    <script src="js/main.js"></script>
+</body>
+</html>

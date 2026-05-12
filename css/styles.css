@@ -132,6 +132,23 @@ nav {
     width: 100%;
 }
 
+.nav-login-btn {
+    margin-left: 1rem;
+    border: 1px solid var(--primary);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    border-radius: 999px;
+    padding: 0.55rem 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.nav-login-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    transform: translateY(-1px);
+}
+
 .mobile-menu {
     display: none;
     flex-direction: column;
@@ -1614,6 +1631,10 @@ footer {
 
     .mobile-menu {
         display: flex;
+    }
+
+    .nav-login-btn {
+        display: none;
     }
 
     .hero h1 {
