@@ -37,22 +37,50 @@ async function readFileAsDataURL(file) {
     });
 }
 
-async function getMessageImageData(page) {
-    const fileInput = document.getElementById(`${page}-image-upload`);
-    if (!fileInput || !fileInput.files || fileInput.files.length === 0) return null;
-
-    const file = fileInput.files[0];
+async function getImageAttachment(file) {
     const dataUrl = await readFileAsDataURL(file);
-    
-    // Extract base64 data from data URL (remove "data:image/jpeg;base64," prefix)
     const base64Data = dataUrl.split(',')[1];
-    
+
     return {
         name: file.name,
         type: file.type,
-        data: base64Data, // Send just the base64 data, not the full data URL
-        fullDataUrl: dataUrl // Keep full URL for display purposes
+        data: base64Data,
+        fullDataUrl: dataUrl
     };
+}
+
+function showTrackerImagePreview(file) {
+    const preview = document.getElementById('tracker-image-preview');
+    if (!preview) return;
+
+    if (!file) {
+        preview.innerHTML = '';
+        return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    preview.innerHTML = `
+        <div class="image-preview-card">
+            <img src="${escapeHtml(previewUrl)}" alt="${escapeHtml(file.name)} preview" />
+            <div class="image-preview-meta">
+                <strong>${escapeHtml(file.name)}</strong>
+                <span>${Math.round(file.size / 1024)} KB</span>
+            </div>
+        </div>
+    `;
+}
+
+function parseJsonFromText(text) {
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start === -1 || end === -1 || end <= start) return null;
+
+    const substring = text.slice(start, end + 1);
+    try {
+        return JSON.parse(substring);
+    } catch (e) {
+        return null;
+    }
 }
 
 function clearImageUpload(page) {
@@ -394,12 +422,23 @@ function initialiseTrackingPage() {
         searchBtn.addEventListener('click', fetchTrackerSearch);
     }
 
+    const imageInput = document.getElementById('tracker-image-upload');
+    if (imageInput) {
+        imageInput.addEventListener('change', () => {
+            const file = imageInput.files?.[0];
+            if (file) {
+                showTrackerImagePreview(file);
+            } else {
+                showTrackerImagePreview(null);
+            }
+        });
+    }
+
     if (addBtn) {
         addBtn.addEventListener('click', async () => {
             const file = document.getElementById('tracker-image-upload')?.files?.[0];
             if (!file) return;
 
-            // Use AI to identify comic from image
             await identifyComicFromImage(file);
         });
     }
@@ -576,52 +615,68 @@ async function identifyComicFromImage(file) {
     resultsContainer.innerHTML = '<div class="typing-indicator" style="justify-content: flex-start;"><span></span><span></span><span></span></div>';
 
     try {
-        // First, get image data
-        const imageData = await readFileAsDataURL(file);
-        
-        // Use AI to describe the image and suggest search terms
-        const aiPrompt = `You are a comic book expert. Analyze this image of a comic book cover. Describe what you see: the title, characters, publisher, issue number, and any distinctive visual elements. Then suggest the most likely comic title and issue number for searching Comic Vine. Respond in this format:
-Title: [suggested title]
-Issue: [suggested issue number]
-Description: [brief description]`;
+        const imageData = await getImageAttachment(file);
+        const visionModelAvailable = availableModels.includes(VISION_MODEL);
+
+        const aiPrompt = visionModelAvailable
+            ? `You are a comic book expert. A user uploaded a comic book cover image. Identify the comic title, publisher, issue number, series, and any distinctive visual details. Return only valid JSON with keys: title, issue, publisher, series, description.`
+            : `You are a comic book expert. The user attached an image of a comic cover, but the app cannot analyze it directly. Describe how to identify this comic from the cover and suggest the best search query using the title, issue number, and publisher. Return only valid JSON with keys: title, issue, publisher, series, description, query.`;
+
+        const requestBody = {
+            model: visionModelAvailable ? VISION_MODEL : DEFAULT_MODEL,
+            prompt: aiPrompt,
+            stream: false
+        };
+
+        if (visionModelAvailable) {
+            requestBody.images = [imageData.data];
+        }
 
         const response = await fetch(OLLAMA_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: DEFAULT_MODEL,
-                prompt: aiPrompt,
-                stream: false
-            })
+            body: JSON.stringify(requestBody)
         });
 
         if (!response.ok) throw new Error('AI analysis failed');
 
         const data = await response.json();
-        const aiResponse = data.response;
+        const aiResponse = data.response || '';
+        const parsed = parseJsonFromText(aiResponse) || {};
 
-        // Parse AI response
-        const titleMatch = aiResponse.match(/Title:\s*(.+)/i);
-        const issueMatch = aiResponse.match(/Issue:\s*(.+)/i);
-        const descMatch = aiResponse.match(/Description:\s*(.+)/i);
+        let suggestedTitle = (parsed.title || '').trim();
+        let suggestedIssue = (parsed.issue || '').trim();
+        let suggestedPublisher = (parsed.publisher || '').trim();
+        const fallbackQuery = (parsed.query || '').trim();
 
-        const suggestedTitle = titleMatch ? titleMatch[1].trim() : 'Unknown';
-        const suggestedIssue = issueMatch ? issueMatch[1].trim() : '';
-        const description = descMatch ? descMatch[1].trim() : aiResponse;
+        if (!suggestedTitle) {
+            const titleMatch = aiResponse.match(/Title:\s*(.+)/i);
+            if (titleMatch) suggestedTitle = titleMatch[1].trim();
+        }
 
-        // Search Comic Vine with suggested title
-        const searchQuery = suggestedTitle + (suggestedIssue ? ` ${suggestedIssue}` : '');
+        if (!suggestedIssue) {
+            const issueMatch = aiResponse.match(/Issue:\s*(.+)/i);
+            if (issueMatch) suggestedIssue = issueMatch[1].trim();
+        }
+
+        const searchQueryParts = [suggestedTitle, suggestedIssue, suggestedPublisher].filter(Boolean);
+        const searchQuery = searchQueryParts.length ? searchQueryParts.join(' ') : fallbackQuery;
+
+        if (!searchQuery) {
+            resultsContainer.innerHTML = `<p class="tracker-help-text">The cover AI could not identify a usable search query. Try a clearer image or search manually.</p>`;
+            return;
+        }
+
         const searchResponse = await fetch(`/api/comics?q=${encodeURIComponent(searchQuery)}`);
         if (!searchResponse.ok) throw new Error('Comic Vine search failed');
 
         const searchResults = await searchResponse.json();
         if (!Array.isArray(searchResults) || searchResults.length === 0) {
-            resultsContainer.innerHTML = `<p class="tracker-help-text">No comics found matching the image. Try a different image or search manually.</p>`;
+            resultsContainer.innerHTML = `<p class="tracker-help-text">No comics were found using "${escapeHtml(searchQuery)}". Try a different image or search manually.</p>`;
             return;
         }
 
-        // Show top results with AI suggestion highlighted
-        renderTrackerSearchResults(searchResults.slice(0, 6), suggestedTitle);
+        renderTrackerSearchResults(searchResults.slice(0, 6), suggestedTitle || fallbackQuery);
 
     } catch (error) {
         resultsContainer.innerHTML = `<p class="tracker-help-text">Unable to identify comic from image: ${escapeHtml(error.message)}</p>`;
