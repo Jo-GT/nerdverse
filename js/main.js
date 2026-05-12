@@ -275,13 +275,8 @@ function initialiseNavigation() {
 }
 
 function addLoginIconToNav() {
-    console.log('addLoginIconToNav called');
     const nav = document.querySelector('nav');
-    console.log('nav element:', nav);
-    if (!nav || document.getElementById('nav-login-btn')) {
-        console.log('nav not found or button already exists');
-        return;
-    }
+    if (!nav || document.getElementById('nav-login-btn')) return;
 
     const loginBtn = document.createElement('button');
     loginBtn.id = 'nav-login-btn';
@@ -293,13 +288,10 @@ function addLoginIconToNav() {
     });
 
     const mobileMenu = nav.querySelector('.mobile-menu');
-    console.log('mobileMenu:', mobileMenu);
     if (mobileMenu) {
         nav.insertBefore(loginBtn, mobileMenu);
-        console.log('inserted before mobile menu');
     } else {
         nav.appendChild(loginBtn);
-        console.log('appended to nav');
     }
 }
 

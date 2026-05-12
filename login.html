@@ -53,13 +53,19 @@
         const CLERK_DOMAIN = 'working-cowbird-13.clerk.accounts.dev';
 
         async function startClerkSignIn() {
-            const clerk = await Clerk.load({ frontendApi: CLERK_FRONTEND_API });
+            const clerk = await Clerk.load({ 
+                frontendApi: CLERK_FRONTEND_API,
+                domain: CLERK_DOMAIN
+            });
             await clerk.openSignIn({ afterSignInUrl: 'tracking.html' });
         }
 
         document.addEventListener('DOMContentLoaded', async function () {
             try {
-                const clerk = await Clerk.load({ frontendApi: CLERK_FRONTEND_API });
+                const clerk = await Clerk.load({ 
+                    frontendApi: CLERK_FRONTEND_API,
+                    domain: CLERK_DOMAIN
+                });
                 if (clerk.user) {
                     window.location.href = 'tracking.html';
                     return;
