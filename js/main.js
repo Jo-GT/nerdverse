@@ -267,7 +267,7 @@ function initialiseNavigation() {
         mobileMenu.addEventListener('click', toggleMobileMenu);
     }
 
-    addLoginIconToNav();
+    loadClerkAndUpdateNav();
 
     // Set active nav link based on current page
     const currentPage = getCurrentPage();
@@ -275,24 +275,89 @@ function initialiseNavigation() {
 }
 
 function addLoginIconToNav() {
-    const nav = document.querySelector('nav');
-    if (!nav || document.getElementById('nav-login-btn')) return;
+    const navLinks = document.querySelector('.nav-links');
+    if (!navLinks || document.getElementById('nav-auth-li')) return;
 
-    const loginBtn = document.createElement('button');
+    const li = document.createElement('li');
+    li.id = 'nav-auth-li';
+
+    const loginBtn = document.createElement('a');
     loginBtn.id = 'nav-login-btn';
-    loginBtn.type = 'button';
-    loginBtn.className = 'nav-login-btn';
-    loginBtn.innerHTML = '🔐 Login';
-    loginBtn.addEventListener('click', () => {
-        window.location.href = 'login.html';
-    });
+    loginBtn.href = 'login.html';
+    loginBtn.className = 'nav-login-link';
+    loginBtn.textContent = 'Login';
 
-    const mobileMenu = nav.querySelector('.mobile-menu');
-    if (mobileMenu) {
-        nav.insertBefore(loginBtn, mobileMenu);
-    } else {
-        nav.appendChild(loginBtn);
+    li.appendChild(loginBtn);
+    navLinks.appendChild(li);
+
+    loadClerkAndUpdateNav();
+}
+
+function injectClerkScript() {
+    if (window.Clerk) return Promise.resolve();
+    if (document.querySelector('script[data-clerk-publishable-key]')) {
+        return new Promise((resolve, reject) => {
+            const existing = document.querySelector('script[data-clerk-publishable-key]');
+            if (existing.dataset.loaded) return resolve();
+            existing.addEventListener('load', () => { existing.dataset.loaded = '1'; resolve(); });
+            existing.addEventListener('error', reject);
+        });
     }
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = `https://${CLERK_DOMAIN}/npm/@clerk/clerk-js@6/dist/clerk.browser.js`;
+        script.setAttribute('data-clerk-publishable-key', CLERK_PUBLISHABLE_KEY);
+        script.crossOrigin = 'anonymous';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
+async function loadClerkAndUpdateNav() {
+    try {
+        await injectClerkScript();
+        await Clerk.load({ publishableKey: CLERK_PUBLISHABLE_KEY });
+        if (Clerk.user) renderNavUserInfo();
+    } catch (e) {
+        // Clerk unavailable — login button remains
+    }
+}
+
+function renderNavUserInfo() {
+    const li = document.getElementById('nav-auth-li');
+    if (!li || !window.Clerk?.user) return;
+
+    const user = Clerk.user;
+    const displayName = user.firstName
+        || user.emailAddresses?.[0]?.emailAddress?.split('@')[0]
+        || 'User';
+
+    li.innerHTML = '';
+    li.style.display = 'flex';
+    li.style.alignItems = 'center';
+    li.style.gap = '0.5rem';
+
+    if (user.imageUrl) {
+        const img = document.createElement('img');
+        img.src = user.imageUrl;
+        img.alt = 'avatar';
+        img.className = 'nav-avatar';
+        li.appendChild(img);
+    }
+
+    const nameLink = document.createElement('a');
+    nameLink.href = 'tracking.html';
+    nameLink.className = 'nav-username-link';
+    nameLink.textContent = displayName;
+    li.appendChild(nameLink);
+
+    const signOutLink = document.createElement('a');
+    signOutLink.href = '#';
+    signOutLink.className = 'nav-login-link nav-signout-link';
+    signOutLink.textContent = 'Sign Out';
+    signOutLink.addEventListener('click', (e) => { e.preventDefault(); signOutClerk(); });
+    li.appendChild(signOutLink);
 }
 
 /**
