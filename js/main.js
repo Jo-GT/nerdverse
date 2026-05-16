@@ -75,6 +75,8 @@ async function getImageAttachment(file) {
     };
 }
 
+// Clerk auth helpers: load the Clerk SDK, wait for the auth state to settle,
+// and redirect users to login if they are not authenticated.
 async function loadClerkClient() {
     if (clerkClient) {
         return clerkClient;
@@ -90,6 +92,7 @@ async function loadClerkClient() {
     return clerkClient;
 }
 
+// Poll Clerk for a signed-in user until the timeout expires.
 async function waitForClerkUser(timeoutMs = 4000) {
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
@@ -101,6 +104,8 @@ async function waitForClerkUser(timeoutMs = 4000) {
     return window.Clerk?.user;
 }
 
+// Ensure the tracker page is only visible to authenticated users.
+// If authentication is missing, redirect to login.html.
 async function ensureAuthenticated() {
     try {
         const clerk = await loadClerkClient();
@@ -134,10 +139,12 @@ async function ensureAuthenticated() {
     }
 }
 
+// Build a storage key that is scoped to each Clerk user.
 function getTrackedComicsStorageKey() {
     return clerkUserId ? `nerdverseTrackedComics:${clerkUserId}` : 'nerdverseTrackedComics';
 }
 
+// Sign the user out and clear their local tracker cache.
 async function signOutClerk() {
     try {
         console.debug('[main.js] signOutClerk start', { isSignedIn: window.Clerk?.isSignedIn, user: window.Clerk?.user });
@@ -159,6 +166,7 @@ async function signOutClerk() {
     window.location.href = 'login.html';
 }
 
+// Show a preview card for the selected tracker image file.
 function showTrackerImagePreview(file) {
     const preview = document.getElementById('tracker-image-preview');
     if (!preview) return;
@@ -180,6 +188,7 @@ function showTrackerImagePreview(file) {
     `;
 }
 
+// Extract a JSON object from model text output when the response contains extra words.
 function parseJsonFromText(text) {
     const start = text.indexOf('{');
     const end = text.lastIndexOf('}');
@@ -193,6 +202,7 @@ function parseJsonFromText(text) {
     }
 }
 
+// Reset the image upload field and preview for the given page.
 function clearImageUpload(page) {
     const fileInput = document.getElementById(`${page}-image-upload`);
     const preview = document.getElementById(`${page}-image-preview`);
@@ -200,6 +210,7 @@ function clearImageUpload(page) {
     if (preview) preview.innerHTML = '';
 }
 
+// Set up image upload listeners and preview rendering for chat pages.
 function initialiseImageUpload(page) {
     const fileInput = document.getElementById(`${page}-image-upload`);
     const preview = document.getElementById(`${page}-image-preview`);
@@ -306,6 +317,9 @@ Present information in a clear, organized timeline format. Reference specific fi
 /**
  * Initialise the application
  */
+// Application bootstrap: run core setup when the DOM is ready.
+// This includes model discovery, navigation, chat listeners, image uploads,
+// tracker initialization, and recommendations if present.
 document.addEventListener('DOMContentLoaded', function() {
     checkAvailableModels(); // Check available models first
     initialiseNavigation();
@@ -603,6 +617,7 @@ function initialiseGenreTags() {
     });
 }
 
+// Track page startup: restrict access, wire up search/image buttons, and load saved comics.
 async function initialiseTrackingPage() {
     if (!document.getElementById('tracking-page')) return;
 
@@ -838,6 +853,8 @@ function openJarvisForComic(index) {
     window.location.href = `jarvis_comic.html?comic=${query}`;
 }
 
+// Identify a comic from a cover image using the available vision model.
+// If the model returns text, the app turns it into search queries against Comic Vine.
 async function identifyComicFromImage(file) {
     const resultsContainer = document.getElementById('tracker-search-results');
     if (!resultsContainer) return;
@@ -1118,6 +1135,8 @@ async function fetchComicVineContext(query) {
 /**
  * Get AI response from Ollama
  */
+// Build the final Ollama prompt for the selected chat page and send it to the model.
+// If an image is attached, prefer the available vision model and include the image bytes.
 async function getAIResponse(page, message, attachment = null) {
     const systemPrompt = SYSTEM_PROMPTS[page];
     let prompt = systemPrompt;
