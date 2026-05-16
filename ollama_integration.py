@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Ollama AI Integration for Comic Recommendations
-Combines Ollama AI with Marvel API data for intelligent recommendations
+Combines Ollama AI with external comic data sources to generate chat responses,
+recommendations, and preference analysis.
 """
 
 import json
@@ -9,12 +10,18 @@ import urllib.request
 import urllib.parse
 import urllib.error
 
-# Ollama Configuration — Ollama must be running locally via `ollama serve`
+# Ollama Configuration — Ollama must be running locally via `ollama serve`.
+# This module sends prompts to the local Ollama HTTP API and parses responses.
 OLLAMA_BASE_URL = 'http://localhost:11434'
 DEFAULT_MODEL = 'llama3.2:latest'
 
 def call_ollama(prompt, model=None, system_prompt=None):
-    """Send a prompt to Ollama and return the text response, or an error string on failure."""
+    """Send a prompt to Ollama and return the text response.
+
+    This function builds the JSON payload for Ollama, sends it to the
+    /api/generate endpoint, and returns the `response` field from the result.
+    It also handles connection errors and HTTP failures gracefully.
+    """
     if model is None:
         model = DEFAULT_MODEL
 
@@ -50,7 +57,10 @@ def call_ollama(prompt, model=None, system_prompt=None):
 
 def check_ollama_status():
     """Check if Ollama is running by hitting /api/tags (the model list endpoint).
-    Uses a 5-second timeout — this is a quick health check, not a generation request."""
+
+    Uses a 5-second timeout to verify the local Ollama server is available and
+    retrieves the list of installed models.
+    """
     url = f"{OLLAMA_BASE_URL}/api/tags"
 
     try:
@@ -69,7 +79,11 @@ def check_ollama_status():
 
 def analyse_preferences_with_ai(user_input, available_comics):
     """
-    Use Ollama to analyse user preferences and explain recommendations
+    Use Ollama to analyse user preferences and explain recommendations.
+
+    Builds a prompt containing the user's stated preferences and a short summary
+    of the available comics, then asks Ollama to explain why the top matches
+    are a good fit.
     """
     # Build context about available comics
     comic_context = "Available comics:\n"
@@ -95,9 +109,10 @@ Explain your reasoning for each recommendation. Format your response as a number
 
 def generate_personalized_recommendation(user_profile, marvel_comics):
     """
-    Generate a personalized recommendation using AI
-    user_profile: dict with user preferences
-    marvel_comics: list of comics from Marvel API
+    Generate a personalized recommendation using AI.
+
+    Converts the user's profile into a prompt and asks Ollama to score the top
+    comics with match reasons. This is used for richer recommendation output.
     """
     # Build user profile summary
     profile_text = f"User likes: {user_profile.get('heroes', 'various')}, "
@@ -153,7 +168,9 @@ Recommend the top 5 comics for this user. Return JSON only."""
 
 def get_ai_explanation(comic_title, user_preferences):
     """
-    Get an AI-generated explanation of why a comic matches user preferences
+    Get an AI-generated explanation of why a comic matches user preferences.
+
+    This helper generates concise user-facing reasoning for a single comic.
     """
     system_prompt = """You are a comic book expert. Provide brief, engaging explanations 
 about why comics match user preferences. Keep it to 2-3 sentences."""
@@ -165,7 +182,10 @@ Give a short, compelling reason."""
 
 def chat_with_ai_about_comics(message, context=None):
     """
-    General chat endpoint for discussing comics with AI
+    General chat endpoint for discussing comics with AI.
+
+    This helper wraps user input in a friendly system prompt and optionally
+    includes additional context such as comic metadata or chat history.
     """
     system_prompt = """You are ComicHelper, an enthusiastic comic book assistant.
 You help users discover new comics, explain storylines, and give recommendations.
