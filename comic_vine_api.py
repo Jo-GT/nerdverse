@@ -15,12 +15,17 @@ import urllib.error
 COMIC_VINE_API_KEY = os.environ.get('COMIC_VINE_API_KEY', '97d02081df7467dfa454642d9ceade798611cbdf')
 COMIC_VINE_BASE_URL = 'https://comicvine.gamespot.com/api'
 
-# Cached availability flag — set on first real request so we don't hit the network at import time
+# Cached availability flag — set on first real request so we don't hit the network at import time.
+# This allows the app to detect whether Comic Vine is reachable without repeated failures.
 _api_available = None
 
 
 def fetch_from_comic_vine(endpoint, params=None):
-    """Generic function to fetch data from Comic Vine API"""
+    """Generic function to fetch data from Comic Vine API.
+
+    Builds the request URL, sends a GET request, handles JSON parsing,
+    and updates the availability cache.
+    """
     global _api_available
     
     if params is None:
@@ -73,7 +78,11 @@ def fetch_from_comic_vine(endpoint, params=None):
 
 
 def is_api_available():
-    """Check if Comic Vine API is reachable"""
+    """Check if Comic Vine API is reachable.
+
+    Uses the cached _api_available flag where possible, and performs a
+    lightweight test search on first access.
+    """
     global _api_available
     if _api_available is None:
         result = search_issues('Spider-Man', limit=1)
@@ -117,7 +126,11 @@ def get_volume_by_id(volume_id):
 
 
 def get_issue_image(issue_data):
-    """Extract the best available image from issue data"""
+    """Extract the best available image from issue data.
+
+    Comic Vine returns a dictionary of image URLs at different sizes.
+    This helper picks the first valid cover URL and avoids placeholder values.
+    """
     image = issue_data.get('image', {})
     for key in ('original_url', 'medium_url', 'screen_url', 'thumb_url', 'icon_url'):
         url = image.get(key)
@@ -133,9 +146,10 @@ def get_issue_price(issue_data):
 
 def format_comic_data(issue):
     """Normalise a raw Comic Vine issue dict into the flat shape the frontend expects.
-    'title' prefers the issue's own name, but will construct a sensible title from the
-    volume name and issue number when Comic Vine returns an untitled numbered issue.
-    'page_count' is passed through so the tracker can show exact reading progress."""
+
+    This creates a consistent comic object for the tracker and recommendation UI.
+    It also derives a readable title when Comic Vine returns untitled numbered issues.
+    """
     image = get_issue_image(issue)
 
     volume_name = issue.get('volume', {}).get('name', '') or ''
@@ -301,8 +315,9 @@ def get_mock_recommendations(preferences):
 
 def get_recommendations_with_comic_vine(user_preferences):
     """
-    Get comic recommendations using Comic Vine API based on user preferences
-    Falls back to mock data if API is unreachable
+    Get comic recommendations using Comic Vine API based on user preferences.
+
+    If the API is unavailable or returns no results, fall back to local mock data.
     """
     # Try API first
     result = search_issues(user_preferences, limit=15)

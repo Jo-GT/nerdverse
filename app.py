@@ -32,6 +32,8 @@ from ollama_integration import (
 PORT = 8000
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 
+# HTTP request handler for the ComicHelper app.
+# It serves static content and routes API requests to the correct handler methods.
 class ComicHelperHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=DIRECTORY, **kwargs)
@@ -65,6 +67,7 @@ class ComicHelperHandler(http.server.SimpleHTTPRequestHandler):
         parsed_path = urllib.parse.urlparse(self.path)
         path = parsed_path.path
         
+        # POST endpoints accept JSON payloads from the frontend.
         if path == '/api/chat':
             self.handle_chat_post()
         elif path == '/api/recommend':
@@ -298,6 +301,8 @@ Use this live data to give more accurate and detailed answers."""
 
 
 def main():
+    # Start the local static file server and API backend.
+    # The server uses ComicHelperHandler to respond to web UI and API routes.
     os.chdir(DIRECTORY)
     
     with socketserver.TCPServer(("", PORT), ComicHelperHandler) as httpd:
