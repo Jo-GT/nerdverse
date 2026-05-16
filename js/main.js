@@ -15,11 +15,12 @@
  */
 
 // ─── 1. Configuration ─────────────────────────────────────────────────────────
-// Ollama runs locally; both the text model (mistral) and vision model (llava) are
-// loaded on demand — llava is only used when the user attaches a cover image.
+// Ollama runs locally; text model (mistral) and vision-capable models are
+// loaded on demand — qwen3-vl:235b-cloud is preferred, with llava as a fallback.
 const OLLAMA_URL = 'http://localhost:11434/api/generate';
 const DEFAULT_MODEL = 'mistral';
-const VISION_MODEL = 'llava'; // requires `ollama pull llava` to be run first
+const VISION_MODEL = 'qwen3-vl:235b-cloud';
+const FALLBACK_VISION_MODELS = ['qwen3-vl:235b-cloud', 'llava']; // install the first available model locally
 const IMAGE_ATTACHMENT_NOTE = 'An image attachment is included with the user request. Use it as supplementary context for the comic question.';
 // Clerk auth keys — tied to the working-cowbird-13 Clerk instance
 const CLERK_PUBLISHABLE_KEY = 'pk_test_d29ya2luZy1jb3diaXJkLTEzLmNsZXJrLmFjY291bnRzLmRldiQ';
@@ -32,6 +33,10 @@ const CLERK_DOMAIN = 'working-cowbird-13.clerk.accounts.dev';
 let availableModels = [];
 let clerkClient = null;
 let clerkUserId = null;
+
+function getAvailableVisionModel() {
+    return FALLBACK_VISION_MODELS.find(model => availableModels.includes(model)) || null;
+}
 
 async function checkAvailableModels() {
     try {
@@ -77,21 +82,50 @@ async function loadClerkClient() {
     if (!window.Clerk) {
         throw new Error('Clerk library is not loaded');
     }
-    clerkClient = await Clerk.load({ 
+    await Clerk.load({ 
         publishableKey: CLERK_PUBLISHABLE_KEY,
         domain: CLERK_DOMAIN
     });
+    clerkClient = window.Clerk || Clerk;
     return clerkClient;
+}
+
+async function waitForClerkUser(timeoutMs = 4000) {
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+        if (window.Clerk?.user || window.Clerk?.isSignedIn) {
+            break;
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    return window.Clerk?.user;
 }
 
 async function ensureAuthenticated() {
     try {
         const clerk = await loadClerkClient();
-        if (!clerk.user) {
+        let user = clerk.user || window.Clerk?.user;
+        const wasSignedIn = window.Clerk?.isSignedIn;
+        console.debug('[main.js] ensureAuthenticated start', { user, wasSignedIn });
+
+        if (!user && wasSignedIn !== true) {
+            user = await waitForClerkUser();
+            console.debug('[main.js] waited for user', { user, wasSignedIn: window.Clerk?.isSignedIn });
+        }
+
+        if (!user && window.Clerk?.isSignedIn) {
+            user = await waitForClerkUser();
+            console.debug('[main.js] second waitForClerkUser', { user, isSignedIn: window.Clerk?.isSignedIn });
+        }
+
+        if (!user) {
+            console.debug('[main.js] redirecting to login.html because no user', { user, isSignedIn: window.Clerk?.isSignedIn });
             window.location.href = 'login.html';
             return false;
         }
-        clerkUserId = clerk.user.id;
+
+        clerkUserId = user.id;
+        console.debug('[main.js] authenticated user', { clerkUserId });
         return true;
     } catch (error) {
         console.error('Clerk auth failed:', error);
@@ -106,11 +140,22 @@ function getTrackedComicsStorageKey() {
 
 async function signOutClerk() {
     try {
-        const clerk = await loadClerkClient();
-        await clerk.signOut();
+        console.debug('[main.js] signOutClerk start', { isSignedIn: window.Clerk?.isSignedIn, user: window.Clerk?.user });
+        if (window.Clerk?.signOut) {
+            await Clerk.signOut();
+        } else {
+            const clerk = await loadClerkClient();
+            if (clerk?.signOut) {
+                await clerk.signOut();
+            }
+        }
     } catch (error) {
         console.warn('Clerk sign out failed:', error);
     }
+
+    clerkUserId = null;
+    localStorage.removeItem(getTrackedComicsStorageKey());
+    console.debug('[main.js] signOutClerk redirecting to login.html');
     window.location.href = 'login.html';
 }
 
@@ -168,7 +213,7 @@ function initialiseImageUpload(page) {
         }
 
         const previewUrl = URL.createObjectURL(file);
-        const visionNote = availableModels.includes(VISION_MODEL) 
+        const visionNote = getAvailableVisionModel()
             ? '<span style="color: var(--secondary);">🤖 AI will analyze this image</span>'
             : '<span style="color: var(--text-secondary);">📎 Image attached (install vision models for AI analysis)</span>';
 
@@ -801,9 +846,10 @@ async function identifyComicFromImage(file) {
 
     try {
         const imageData = await getImageAttachment(file);
-        const visionModelAvailable = availableModels.includes(VISION_MODEL);
+        const availableVisionModel = getAvailableVisionModel();
+        const visionModelAvailable = Boolean(availableVisionModel);
 
-        // Vision prompt: tells LLaVA to read actual text from the cover rather than guess visually.
+        // Vision prompt: tells the vision model to read actual text from the cover rather than guess visually.
         // Being explicit about what to look for (title size, issue number format, publisher logo position)
         // dramatically reduces hallucinated results.
         const aiPrompt = visionModelAvailable
@@ -811,7 +857,7 @@ async function identifyComicFromImage(file) {
             : `You are a comic book expert. The user attached an image of a comic cover, but the app cannot analyze it directly. Based on common knowledge, suggest the best search query for finding this comic using a likely title, issue number, and publisher. Return only valid JSON with keys: title, issue, publisher, series, description, query.`;
 
         const requestBody = {
-            model: visionModelAvailable ? VISION_MODEL : DEFAULT_MODEL,
+            model: availableVisionModel || DEFAULT_MODEL,
             prompt: aiPrompt,
             stream: false
         };
@@ -968,7 +1014,7 @@ function addMessage(page, content, sender, imageData = null) {
         
         // Add image if present
         if (imageData) {
-            const visionStatus = availableModels.includes(VISION_MODEL) 
+            const visionStatus = getAvailableVisionModel()
                 ? '<span style="color: var(--secondary)">🤖 AI can analyze this</span>'
                 : '<span style="color: var(--text-secondary)">📎 Image attached</span>';
             
@@ -1079,12 +1125,12 @@ async function getAIResponse(page, message, attachment = null) {
     // Determine which model to use
     let modelToUse = DEFAULT_MODEL;
     let images = null;
-    let visionModelAvailable = availableModels.includes(VISION_MODEL);
 
     if (attachment) {
-        if (visionModelAvailable) {
+        const availableVisionModel = getAvailableVisionModel();
+        if (availableVisionModel) {
             // Use vision model for image processing
-            modelToUse = VISION_MODEL;
+            modelToUse = availableVisionModel;
             images = [attachment.data]; // Ollama expects base64 encoded images
             prompt += `\n\nThe user has attached an image. Analyze the image and use it as context to help answer their comic-related question. Describe what you see in the image and how it relates to comics if applicable.`;
         } else {
@@ -1125,7 +1171,7 @@ async function getAIResponse(page, message, attachment = null) {
     };
 
     // Add images if present and vision model is available
-    if (images && visionModelAvailable) {
+    if (images && getAvailableVisionModel()) {
         requestBody.images = images;
     }
 

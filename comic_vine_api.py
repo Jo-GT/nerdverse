@@ -133,20 +133,32 @@ def get_issue_price(issue_data):
 
 def format_comic_data(issue):
     """Normalise a raw Comic Vine issue dict into the flat shape the frontend expects.
-    'title' falls back to the volume name when the issue itself has no name (common for
-    numbered issues that Comic Vine stores without a separate issue title).
+    'title' prefers the issue's own name, but will construct a sensible title from the
+    volume name and issue number when Comic Vine returns an untitled numbered issue.
     'page_count' is passed through so the tracker can show exact reading progress."""
     image = get_issue_image(issue)
 
+    volume_name = issue.get('volume', {}).get('name', '') or ''
+    issue_name = (issue.get('name') or '').strip()
+    issue_number = issue.get('issue_number')
+
+    if issue_name:
+        title = issue_name
+        # If the issue name is identical to the series name, use a more descriptive title.
+        if volume_name and issue_name.lower() == volume_name.lower():
+            title = f"{volume_name} #{issue_number}" if issue_number else volume_name
+    else:
+        title = f"{volume_name} #{issue_number}" if volume_name and issue_number else volume_name or 'Unknown Title'
+
     return {
         'id': issue.get('id'),
-        'title': issue.get('name', issue.get('volume', {}).get('name', 'Unknown')),
+        'title': title,
         'description': issue.get('description', 'No description available.'),
         'image': image,
         'price': issue.get('cover_date', 'N/A'),
         'page_count': issue.get('page_count', 0),  # used by tracker for page-by-page progress
-        'issue_number': issue.get('issue_number', 0),
-        'series': issue.get('volume', {}).get('name', ''),
+        'issue_number': issue_number or 0,
+        'series': volume_name,
         'release_date': issue.get('cover_date', ''),
         'store_date': issue.get('store_date', ''),
         'creators': [c['name'] for c in issue.get('person_credits', [])],

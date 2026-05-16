@@ -44,6 +44,10 @@
     </main>
 
     <footer>
+        <div class="spotify-footer-widget">
+            <iframe loading="lazy" title="NerdVerse Spotify playlist" src="https://open.spotify.com/embed/playlist/2Dbk28yarLzTogeOGSNeaL?utm_source=generator" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
+            <p class="spotify-footer-note">Listen to the official NerdVerse Spotify playlist while you explore comics.</p>
+        </div>
         <p>NerdVerse - Powered by <a href="https://ollama.com" target="_blank">Ollama</a></p>
     </footer>
 
@@ -61,13 +65,34 @@
         type="text/javascript"
     ></script>
     <script>
+        const CLERK_PUBLISHABLE_KEY = 'pk_test_d29ya2luZy1jb3diaXJkLTEzLmNsZXJrLmFjY291bnRzLmRldiQ';
+        const CLERK_DOMAIN = 'working-cowbird-13.clerk.accounts.dev';
+
         window.addEventListener('load', async function () {
             try {
                 await Clerk.load({
+                    publishableKey: CLERK_PUBLISHABLE_KEY,
+                    domain: CLERK_DOMAIN,
                     ui: { ClerkUI: window.__internal_ClerkUICtor },
                 });
+                console.debug('[login.html] Clerk loaded', { user: Clerk.user, isSignedIn: Clerk.isSignedIn });
 
-                if (Clerk.isSignedIn) {
+                const waitForUser = async (timeoutMs = 3000) => {
+                    const start = Date.now();
+                    while (Date.now() - start < timeoutMs) {
+                        if (Clerk.user || Clerk.isSignedIn) {
+                            break;
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                    console.debug('[login.html] waitForUser ended', { user: Clerk.user, isSignedIn: Clerk.isSignedIn });
+                    return Clerk.user;
+                };
+
+                const user = Clerk.user || await waitForUser();
+                console.debug('[login.html] login state', { user, isSignedIn: Clerk.isSignedIn });
+                if (user || Clerk.isSignedIn) {
+                    console.debug('[login.html] redirecting to tracking.html');
                     window.location.href = 'tracking.html';
                     return;
                 }
