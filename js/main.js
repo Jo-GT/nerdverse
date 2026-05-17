@@ -15,10 +15,11 @@
  */
 
 // ─── 1. Configuration ─────────────────────────────────────────────────────────
-// Ollama runs locally; text model (mistral) and vision-capable models are
+// Ollama runs locally; text model (gpt-oss:120b-cloud) and vision-capable models are
 // loaded on demand — qwen3-vl:235b-cloud is preferred, with llava as a fallback.
 const OLLAMA_URL = 'http://localhost:11434/api/generate';
-const DEFAULT_MODEL = 'mistral';
+const DEFAULT_MODEL = 'gpt-oss:120b-cloud';
+const PREFERRED_TEXT_MODELS = ['gpt-oss:120b-cloud', 'llama3.2:latest', 'llama3.1', 'llama2'];
 const VISION_MODEL = 'qwen3-vl:235b-cloud';
 const FALLBACK_VISION_MODELS = ['qwen3-vl:235b-cloud', 'llava']; // install the first available model locally
 const IMAGE_ATTACHMENT_NOTE = 'An image attachment is included with the user request. Use it as supplementary context for the comic question.';
@@ -36,6 +37,10 @@ let clerkUserId = null;
 
 function getAvailableVisionModel() {
     return FALLBACK_VISION_MODELS.find(model => availableModels.includes(model)) || null;
+}
+
+function getAvailableTextModel() {
+    return PREFERRED_TEXT_MODELS.find(model => availableModels.includes(model)) || DEFAULT_MODEL;
 }
 
 async function checkAvailableModels() {
@@ -73,6 +78,20 @@ async function getImageAttachment(file) {
         data: base64Data,
         fullDataUrl: dataUrl
     };
+}
+
+async function getMessageImageData(page) {
+    const fileInput = document.getElementById(`${page}-image-upload`);
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        return null;
+    }
+
+    try {
+        return await getImageAttachment(fileInput.files[0]);
+    } catch (error) {
+        console.warn(`Could not read image attachment for ${page}:`, error);
+        return null;
+    }
 }
 
 // Clerk auth helpers: load the Clerk SDK, wait for the auth state to settle,
@@ -874,7 +893,7 @@ async function identifyComicFromImage(file) {
             : `You are a comic book expert. The user attached an image of a comic cover, but the app cannot analyze it directly. Based on common knowledge, suggest the best search query for finding this comic using a likely title, issue number, and publisher. Return only valid JSON with keys: title, issue, publisher, series, description, query.`;
 
         const requestBody = {
-            model: availableVisionModel || DEFAULT_MODEL,
+            model: availableVisionModel || getAvailableTextModel(),
             prompt: aiPrompt,
             stream: false
         };
@@ -1025,7 +1044,7 @@ function addMessage(page, content, sender, imageData = null) {
     
     let messageContent = '';
     if (sender === 'ai') {
-        messageContent = `<div class="message-label">J.A.R.V.I.S.</div><p>${escapeHtml(content)}</p>`;
+        messageContent = `<div class="message-label">J.A.R.V.I.S.</div>${formatChatText(content)}`;
     } else {
         messageContent = `<div class="message-label">You</div>`;
         
@@ -1076,6 +1095,13 @@ function hideTypingIndicator(page) {
     if (indicator) {
         indicator.remove();
     }
+}
+
+function formatChatText(text) {
+    if (!text) return '';
+    const escaped = escapeHtml(text);
+    const paragraphs = escaped.split(/\n{2,}/g).map(p => p.trim()).filter(Boolean);
+    return paragraphs.map(paragraph => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`).join('');
 }
 
 // ─── 8. Context helpers ───────────────────────────────────────────────────────
@@ -1142,7 +1168,7 @@ async function getAIResponse(page, message, attachment = null) {
     let prompt = systemPrompt;
 
     // Determine which model to use
-    let modelToUse = DEFAULT_MODEL;
+    let modelToUse = getAvailableTextModel();
     let images = null;
 
     if (attachment) {

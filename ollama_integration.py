@@ -13,7 +13,7 @@ import urllib.error
 # Ollama Configuration — Ollama must be running locally via `ollama serve`.
 # This module sends prompts to the local Ollama HTTP API and parses responses.
 OLLAMA_BASE_URL = 'http://localhost:11434'
-DEFAULT_MODEL = 'llama3.2:latest'
+DEFAULT_MODEL = 'gpt-oss:120b-cloud'
 
 def call_ollama(prompt, model=None, system_prompt=None):
     """Send a prompt to Ollama and return the text response.

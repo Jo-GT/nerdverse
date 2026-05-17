@@ -557,11 +557,15 @@
             messages.scrollTop = messages.scrollHeight;
         }
 
-        function addMessage(content, isUser = false) {
+        function addMessage(content, isUser = false, isBotResponse = false) {
             const messages = document.getElementById('chat-messages');
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${isUser ? 'user' : 'jarvis'}`;
-            messageDiv.innerHTML = `<div class="message-content">${content}</div>`;
+            if (isBotResponse) {
+                messageDiv.innerHTML = `<div class="message-content">${formatResponseText(content)}</div>`;
+            } else {
+                messageDiv.innerHTML = `<div class="message-content">${content}</div>`;
+            }
             messages.appendChild(messageDiv);
             messages.scrollTop = messages.scrollHeight;
         }
@@ -585,6 +589,18 @@
         function hideTypingIndicator() {
             const indicator = document.getElementById('typing-indicator');
             if (indicator) indicator.remove();
+        }
+
+        function formatResponseText(text) {
+            if (!text) return '';
+            const escaped = text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+            const paragraphs = escaped.split(/\n{2,}/g).map(p => p.trim()).filter(Boolean);
+            return paragraphs.map(paragraph => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`).join('');
         }
 
         async function sendMessage() {
@@ -616,7 +632,7 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    addMessage(data.response);
+                    addMessage(data.response, false, true);
                     chatHistory.push({ role: 'user', content: message });
                     chatHistory.push({ role: 'assistant', content: data.response });
                 } else {
