@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  dcu.html — DCU Interactive Timeline + J.A.R.V.I.S. Chat
+  dcu.html — DCU Interactive Timeline + Oracle Chat
   ─────────────────────────────────────────────────────────────
   Mirrors the structure of marvel.html but for the DC Cinematic
   Universe (DCEU + the Gunn-era reboot).
@@ -593,9 +593,9 @@
         <!-- AI Assistant -->
         <div class="ai-assistant-section">
             <div class="ai-header">
-                <div class="ai-avatar">J</div>
+                <div class="ai-avatar">O</div>
                 <div>
-                    <div class="ai-title">J.A.R.V.I.S. Assistant</div>
+                    <div class="ai-title">Oracle Assistant</div>
                     <div class="ai-subtitle">Your personal DC universe guide</div>
                 </div>
             </div>
@@ -622,8 +622,8 @@
             <div class="chat-container">
                 <div class="chat-messages" id="dcu-chat-messages">
                     <div class="chat-message ai">
-                        <div class="message-label">J.A.R.V.I.S.</div>
-                        <p>Greetings, Sir. I am J.A.R.V.I.S., your personal assistant for all things DC. Whether you wish to understand the chronology of the DC Extended Universe, navigate the recent DCU reboot, or explore the connections between various films and television series, I am at your service. How may I be of assistance?</p>
+                        <div class="message-label">Oracle</div>
+                        <p>Greetings, Sir. I am Oracle, your personal DCU assistant. Whether you wish to understand the chronology of the DC Extended Universe, navigate the recent DCU reboot, or explore the connections between various films and television series, I am at your service. How may I be of assistance?</p>
                     </div>
                 </div>
                 <div class="typing-indicator" id="dcu-typing">Analyzing query...</div>
@@ -773,7 +773,7 @@
 
                 const aiMsg = document.createElement('div');
                 aiMsg.className = 'chat-message ai';
-                aiMsg.innerHTML = `<div class="message-label">J.A.R.V.I.S.</div><p>${response}</p>`;
+                aiMsg.innerHTML = `<div class="message-label">Oracle</div><p>${response}</p>`;
                 dcuMessages.appendChild(aiMsg);
 
                 dcuMessages.scrollTop = dcuMessages.scrollHeight;
